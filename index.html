@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>阿姨点餐 V11 (自动保存版)</title>
+    <title>阿姨管家 V13 (智能切换版)</title>
     <style>
-        /* 保持 V10 的所有精美样式，未做改动 */
+        /* V13 样式 - 保持 iOS 风格 */
         :root {
             --primary: #007AFF; --lunch-color: #FF9500; --dinner-color: #5856D6;
             --bf-color: #34C759; --bg: #F2F2F7; --card-bg: #FFFFFF;
@@ -156,7 +156,7 @@
 <body>
 
 <div class="header">
-    <h1>🍱 阿姨管家 V11 (自动保存)</h1>
+    <h1>🍱 阿姨管家 V13</h1>
     <div class="edit-btn" onclick="toggleEditMode()" id="editBtn">✎ 编辑菜单</div>
 </div>
 
@@ -289,9 +289,8 @@
     let orders = {}; 
     let orderCtx = null; let editCtx = null; 
 
-    // *** 自动保存逻辑 START ***
     function loadData() {
-        const saved = localStorage.getItem('myMenuDataV11');
+        const saved = localStorage.getItem('myMenuDataV13'); // 使用新Key V13
         if (saved) {
             try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(initialData)); }
         } else {
@@ -299,12 +298,11 @@
         }
     }
     function saveData() {
-        try { localStorage.setItem('myMenuDataV11', JSON.stringify(data)); } catch(e) { alert("图片太大，无法保存，请使用小一点的图片"); }
+        try { localStorage.setItem('myMenuDataV13', JSON.stringify(data)); } catch(e) { alert("图片太大，无法保存，请使用小一点的图片"); }
     }
-    // *** 自动保存逻辑 END ***
 
     function init() {
-        loadData(); // 加载数据
+        loadData();
         renderView();
         renderSettings();
     }
@@ -365,15 +363,49 @@
             toggleMealUI('lunch', order.lunch && order.lunch.active);
             document.getElementById('qty-lunch').innerText = (order.lunch && order.lunch.count) || 1;
             document.getElementById('note-lunch').value = (order.lunch && order.lunch.note) || "";
+            
             toggleMealUI('dinner', order.dinner && order.dinner.active);
             document.getElementById('qty-dinner').innerText = (order.dinner && order.dinner.count) || 1;
-            setDinnerMode((order.dinner && order.dinner.mode) || 'cook');
-            let dNote = (order.dinner && order.dinner.note) || "";
-            if(!dNote && item.prep) dNote = item.prep;
+            
+            // 晚餐逻辑 V13 修改点
+            const dMode = (order.dinner && order.dinner.mode) || 'cook';
+            
+            // 1. 先设置好变量 dNote
+            let dNote = "";
+            if (order.dinner && order.dinner.note) {
+                dNote = order.dinner.note; // 有订单，用订单的
+            } else {
+                // 没订单，根据模式判断
+                if (dMode === 'prep' && item.prep) dNote = item.prep;
+                else dNote = ""; // Cook 模式默认空
+            }
+            
+            // 2. 写入 Input
             document.getElementById('note-dinner').value = dNote;
+            
+            // 3. 设置按钮状态（不触发 input 修改）
+            setDinnerMode(dMode, false);
         }
         openModal('orderModal');
     }
+
+    // V13 核心：智能切换逻辑
+    function setDinnerMode(m, updateInput = true) {
+        document.getElementById('opt-cook').className = m==='cook'?'toggle-opt selected':'toggle-opt';
+        document.getElementById('opt-prep').className = m==='prep'?'toggle-opt selected':'toggle-opt';
+        document.getElementById('sec-dinner').dataset.mode = m;
+        
+        if (updateInput) {
+            const input = document.getElementById('note-dinner');
+            if (m === 'cook') {
+                input.value = ""; // Cook -> 清空
+            } else {
+                // Prep -> 填入记忆的切配要求
+                if (orderCtx.item.prep) input.value = orderCtx.item.prep;
+            }
+        }
+    }
+
     function toggleMeal(m) { 
         const c = m==='bf'?'active-bf':'active';
         const el = document.getElementById('sec-'+m);
@@ -389,14 +421,22 @@
         const el = document.getElementById('qty-'+m);
         let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v;
     }
-    function setDinnerMode(m) {
-        document.getElementById('opt-cook').className = m==='cook'?'toggle-opt selected':'toggle-opt';
-        document.getElementById('opt-prep').className = m==='prep'?'toggle-opt selected':'toggle-opt';
-        document.getElementById('sec-dinner').dataset.mode = m;
-    }
+    
     function confirmOrder() {
         const item = orderCtx.item;
         if(!orders[item.n]) orders[item.n] = {};
+
+        // V13 核心：自动记忆切配内容
+        const dNoteInput = document.getElementById('note-dinner').value;
+        const currentMode = document.getElementById('sec-dinner').dataset.mode;
+        
+        // 如果是切配模式，且用户填了内容，且内容变了 -> 更新数据库
+        if (currentMode === 'prep' && dNoteInput && dNoteInput !== item.prep) {
+            orderCtx.item.prep = dNoteInput;
+            orderCtx.item.note = dNoteInput;
+            saveData(); // 永久保存
+        }
+
         if(orderCtx.tab === 'bf') {
             if(document.getElementById('sec-bf').classList.contains('active-bf')) {
                 orders[item.n].bf = { active:true, count:parseInt(document.getElementById('qty-bf').innerText), note:document.getElementById('note-bf').value };
@@ -406,7 +446,7 @@
                 orders[item.n].lunch = { active:true, count:parseInt(document.getElementById('qty-lunch').innerText), note:document.getElementById('note-lunch').value };
             } else delete orders[item.n].lunch;
             if(document.getElementById('sec-dinner').classList.contains('active')) {
-                orders[item.n].dinner = { active:true, count:parseInt(document.getElementById('qty-dinner').innerText), mode:document.getElementById('sec-dinner').dataset.mode, note:document.getElementById('note-dinner').value };
+                orders[item.n].dinner = { active:true, count:parseInt(document.getElementById('qty-dinner').innerText), mode:currentMode, note:dNoteInput };
             } else delete orders[item.n].dinner;
         }
         if(Object.keys(orders[item.n]).length===0) delete orders[item.n];
