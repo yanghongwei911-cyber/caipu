@@ -3,283 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>阿姨管家 V19 (智能记忆版)</title>
+    <title>大奇奇的美味指令</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        /* --- 样式区域 (保持 V18 的完美样式) --- */
+        /* --- V20 温馨配色方案 --- */
         :root {
-            --primary: #007AFF; --lunch-color: #FF9500; --dinner-color: #5856D6;
-            --bf-color: #34C759; --bg: #F2F2F7; --card-bg: #FFFFFF;
-            --text-main: #1C1C1E; --text-sub: #8E8E93; --radius: 12px;
+            /* 核心主色：暖珊瑚粉，温馨又醒目 */
+            --primary: #FF7E67; 
+            /* 辅助色：柔和的奶油黄，用于背景 */
+            --bg: #FFF9F2; 
+            /* 卡片背景：纯白 */
+            --card-bg: #FFFFFF;
+            /* 文字颜色：暖深灰，比纯黑更柔和 */
+            --text-main: #5D5550; 
+            --text-sub: #9E948D;
+            
+            /* 功能色 */
+            --lunch-color: #FFB03B; /* 温暖的橙 */
+            --dinner-color: #8B80F9; /* 梦幻的紫 */
+            --bf-color: #6BCB77;     /* 清新的绿 */
+            
+            --radius: 20px; /* 更圆润的圆角 */
+            --shadow: 0 4px 20px rgba(255, 126, 103, 0.08); /* 柔和的阴影 */
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-            background-color: var(--bg); color: var(--text-main); margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0;
             padding-bottom: 120px; 
-            -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; -webkit-user-select: none;
         }
 
+        /* --- 顶部标题区：温馨的核心 --- */
         .header {
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            padding: 12px 20px; position: sticky; top: 0; z-index: 100;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(15px);
+            padding: 15px 20px; 
+            position: sticky; top: 0; z-index: 100;
+            display: flex; flex-direction: column; align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.02);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
         }
-        .header h1 { margin: 0; font-size: 18px; font-weight: 800; }
-        .action-btn {
-            font-size: 14px; color: var(--primary); background: rgba(0,122,255,0.1);
-            padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.3s;
+        .header h1 { 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 800; 
+            color: var(--primary);
+            letter-spacing: 1px;
         }
-        .action-btn.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+        
+        /* 编辑按钮：做成一个小小的胶囊，放在右下角或者绝对定位 */
+        .edit-trigger {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            background: #FFF0EB;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .edit-trigger.saving-mode {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 126, 103, 0.3);
+        }
 
-        .tabs { display: flex; background: var(--card-bg); padding: 4px; margin: 10px 15px; border-radius: 14px; }
-        .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 600; color: var(--text-sub); border-radius: 10px; }
-        .tab.active { background: #E4EBF5; color: var(--primary); }
+        /* --- 标签页：像两块小饼干 --- */
+        .tabs { 
+            display: flex; 
+            background: rgba(255,255,255,0.6); 
+            padding: 6px; 
+            margin: 15px 20px; 
+            border-radius: 25px; 
+        }
+        .tab { 
+            flex: 1; 
+            text-align: center; 
+            padding: 10px 0; 
+            font-size: 15px; 
+            font-weight: 700; 
+            color: var(--text-sub); 
+            border-radius: 20px; 
+            transition: 0.3s;
+        }
+        .tab.active { 
+            background: #FFFFFF; 
+            color: var(--primary); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
 
-        .section { display: none; padding: 0 15px; }
+        .section { display: none; padding: 0 20px; }
         .section.active { display: block; }
 
-        .cat-wrapper { margin-bottom: 15px; background: transparent; border-radius: 12px; transition: 0.2s; }
-        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 10px; border: 1px dashed #ccc; }
+        /* --- 分类区 --- */
+        .cat-wrapper { margin-bottom: 20px; background: transparent; border-radius: var(--radius); transition: 0.2s; }
+        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.6); padding: 10px; border: 2px dashed #FFD1C7; }
 
-        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; }
-        .cat-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-        .cat-title::before { content:''; width:4px; height:16px; background:var(--primary); border-radius:2px; }
+        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 5px;}
+        .cat-title { 
+            font-size: 18px; 
+            font-weight: 800; 
+            color: #6D635E;
+            display: flex; align-items: center; gap: 8px; 
+        }
+        /* 可爱的装饰条 */
+        .cat-title::before { 
+            content:''; width:6px; height:6px; 
+            background:var(--primary); border-radius:50%; 
+        }
         
-        .tools { display: none; align-items: center; gap: 10px; }
+        .tools { display: none; align-items: center; gap: 12px; }
         body.edit-mode .tools { display: flex; }
         .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
-        
-        .drag-handle {
-            font-size: 22px; color: var(--text-main); cursor: grab; padding: 0 10px;
-            touch-action: none;
-        }
+        .drag-handle { font-size: 20px; color: #D1C7C0; cursor: grab; padding: 0 10px; touch-action: none; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 12px; min-height: 10px; }
+        /* --- 菜品卡片：温馨的小方块 --- */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 15px; min-height: 10px; }
 
         .card {
-            background: var(--card-bg); border-radius: var(--radius); overflow: hidden;
-            position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            background: var(--card-bg); 
+            border-radius: var(--radius); 
+            overflow: hidden;
+            position: relative; 
+            box-shadow: var(--shadow);
             display: flex; flex-direction: column; 
-            -webkit-touch-callout: none; transition: transform 0.2s;
+            -webkit-touch-callout: none; 
+            transition: all 0.2s;
+            border: 2px solid transparent;
         }
-        .card:active { transform: scale(0.97); }
-        .card.sel-bf { border-color: var(--bf-color); background: #F0FFF4; }
-        .card.sel-lunch { border-color: var(--lunch-color); background: #FFF8F0; }
-        .card.sel-dinner { border-color: var(--dinner-color); background: #F4F4FF; }
-        .card.sel-both { border-color: var(--primary); background: #F0F8FF; }
+        .card:active { transform: scale(0.96); }
+        
+        /* 选中状态 - 加粗边框和柔和背景 */
+        .card.sel-bf { border-color: var(--bf-color); background: #F2FDF5; }
+        .card.sel-lunch { border-color: var(--lunch-color); background: #FFF9F0; }
+        .card.sel-dinner { border-color: var(--dinner-color); background: #F7F6FF; }
+        .card.sel-both { border-color: var(--primary); background: #FFF0EB; }
 
-        .sortable-ghost { opacity: 0.4; background: #ddd; }
-        .sortable-drag { transform: scale(1.05); z-index: 999; opacity: 0.9; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-
-        .card-img { width: 100%; height: 85px; object-fit: cover; background: #eee; pointer-events: none; }
-        .card-body { padding: 10px 6px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
-        .card-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin: 1px;}
-        .bg-bf { background: var(--bf-color); } .bg-lunch { background: var(--lunch-color); }
-        .bg-dinner { background: var(--dinner-color); } .bg-prep { background: #8E8E93; }
+        .card-img { width: 100%; height: 90px; object-fit: cover; background: #FFF5E8; pointer-events: none; }
+        .card-body { padding: 12px 8px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
+        .card-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #5D5550; }
+        
+        .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin: 2px; font-weight: 600;}
+        .bg-bf { background: var(--bf-color); } 
+        .bg-lunch { background: var(--lunch-color); }
+        .bg-dinner { background: var(--dinner-color); } 
+        .bg-prep { background: #B8B2A9; }
 
         .card-mask {
             position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(255,255,255,0.8); z-index: 10; display: none;
+            background: rgba(255,255,255,0.85); z-index: 10; display: none;
             align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
         }
         body.edit-mode .card-mask { display: flex; }
-        .mini-btn { font-size: 12px; padding: 6px 12px; border-radius: 15px; border: 1px solid #ccc; background: white; font-weight: bold; }
+        .mini-btn { 
+            font-size: 13px; padding: 6px 15px; 
+            border-radius: 20px; border: none; 
+            background: white; color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-weight: bold; 
+        }
 
+        /* --- 底部栏 --- */
         .footer {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
-            padding: 12px 20px; border-top: 1px solid #eee; z-index: 200;
-            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+            padding: 15px 25px; 
+            z-index: 200;
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
         }
         .btn-submit {
-            width: 100%; background: var(--text-main); color: white; border: none;
-            padding: 14px; border-radius: 25px; font-weight: 600; font-size: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            width: 100%; 
+            background: var(--primary); 
+            color: white; border: none;
+            padding: 16px; border-radius: 30px; 
+            font-weight: 700; font-size: 17px;
+            box-shadow: 0 8px 20px rgba(255, 126, 103, 0.3);
+            letter-spacing: 1px;
+            transition: 0.2s;
         }
+        .btn-submit:active { transform: scale(0.98); }
 
+        /* --- 弹窗 --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 300; display: none; align-items: flex-end; justify-content: center;
+            background: rgba(93, 85, 80, 0.4); z-index: 300; display: none; align-items: flex-end; justify-content: center;
         }
         .modal-overlay.show { display: flex; }
         .modal-sheet {
-            background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.15); animation: slideUp 0.2s ease-out;
-            padding-bottom: max(25px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto;
+            background: #FFFFFF; width: 100%; max-width: 500px; 
+            border-radius: 30px 30px 0 0; 
+            padding: 25px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1); animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding-bottom: max(30px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; background: #F9F9F9; font-size: 16px; margin-bottom: 10px; }
-        .btn-full { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 5px;}
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-danger { background: #FF3B30; color: white; }
-        .btn-secondary { background: #E5E5EA; color: #000; }
+        /* 输入框优化 */
+        input, textarea { 
+            width: 100%; padding: 14px; 
+            border: 2px solid #F2EEEA; 
+            border-radius: 16px; 
+            box-sizing: border-box; 
+            background: #FCFAF8; 
+            font-size: 16px; margin-bottom: 12px; 
+            color: var(--text-main);
+            transition: 0.2s;
+        }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; background: white; }
+
+        /* 按钮组 */
+        .btn-full { width: 100%; padding: 14px; border-radius: 18px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 8px;}
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(255, 126, 103, 0.2); }
+        .btn-danger { background: #FFB0B0; color: white; }
+        .btn-secondary { background: #F0EBE8; color: #6D635E; }
         
         .upload-area {
-            width: 100%; height: 100px; border: 2px dashed #ccc; border-radius: 10px;
+            width: 100%; height: 110px; border: 2px dashed #E0D8D5; border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
-            color: #999; font-weight: 600; margin-bottom: 15px; background-size: contain; background-repeat: no-repeat; background-position: center;
+            color: #B0A8A4; font-weight: 600; margin-bottom: 15px; 
+            background-color: #FAF8F6;
+            background-size: contain; background-repeat: no-repeat; background-position: center;
         }
 
-        .meal-section { background: #F9F9F9; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 2px solid transparent; transition: 0.2s; }
-        .meal-section.active { border-color: var(--primary); background: #F0F8FF; }
-        .meal-section.active-bf { border-color: var(--bf-color); background: #F0FFF4; }
+        /* 点餐详情区：像卡片一样浮起来 */
+        .meal-section { 
+            background: white; 
+            border-radius: 16px; padding: 18px; margin-bottom: 12px; 
+            border: 2px solid #F5F0ED; 
+            transition: 0.2s; 
+        }
+        .meal-section.active { border-color: var(--primary); background: #FFF5F2; }
+        .meal-section.active-bf { border-color: var(--bf-color); background: #F2FDF5; }
         
-        .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; }
-        .detail-box { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 16px; }
+        .detail-box { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.08); }
         .meal-section.active .detail-box, .meal-section.active-bf .detail-box { display: block; }
 
         .stepper { display: flex; gap: 15px; align-items: center; }
-        .step-btn { width: 32px; height: 32px; background: white; border: 1px solid #ddd; border-radius: 50%; font-weight: bold; font-size: 18px; display:flex; align-items:center; justify-content:center;}
-        .toggle-row { display: flex; background: #EEE; padding: 3px; border-radius: 8px; margin-bottom: 10px; }
-        .toggle-opt { flex: 1; text-align: center; padding: 8px; font-size: 13px; border-radius: 6px; color: #888; }
-        .toggle-opt.selected { background: white; color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .step-btn { 
+            width: 32px; height: 32px; 
+            background: white; border: 2px solid #EFEBE9; 
+            border-radius: 50%; color: var(--primary);
+            font-weight: 900; font-size: 18px; 
+            display:flex; align-items:center; justify-content:center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
         
-        .settings-panel { background: var(--card-bg); padding: 15px; border-radius: var(--radius); margin-bottom: 15px; }
-        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;}
-        .chip { padding: 6px 12px; background: #F2F2F7; border-radius: 18px; font-size: 13px; position: relative; }
-        .chip.lunch-active { background: var(--lunch-color); color: white; }
-        .chip.dinner-active { background: var(--dinner-color); color: white; }
-        .chip-del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #FF3B30; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold;}
+        /* 选项切换 */
+        .toggle-row { display: flex; background: #F0EBE8; padding: 4px; border-radius: 12px; margin-bottom: 12px; }
+        .toggle-opt { flex: 1; text-align: center; padding: 10px; font-size: 14px; border-radius: 10px; color: #999; font-weight: 600;}
+        .toggle-opt.selected { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        /* 设置面板 */
+        .settings-panel { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .chip-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;}
+        .chip { 
+            padding: 8px 15px; background: #F7F4F2; 
+            border-radius: 20px; font-size: 13px; position: relative; 
+            color: #6D635E; font-weight: 600;
+        }
+        .chip.lunch-active { background: var(--lunch-color); color: white; box-shadow: 0 3px 10px rgba(255, 176, 59, 0.3); }
+        .chip.dinner-active { background: var(--dinner-color); color: white; box-shadow: 0 3px 10px rgba(139, 128, 249, 0.3); }
+        .chip-del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #FF6B6B; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border: 2px solid white;}
         body.edit-mode .chip-del { display: flex; }
 
         .action-group { display: flex; gap: 15px; margin-top: 10px; }
         .action-group .btn-full { margin-top: 0; }
+        
+        /* 标题emoji装饰 */
+        .sheet-title { font-weight: 800; font-size: 20px; color: var(--text-main); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>🍱 阿姨管家 V19</h1>
-    <div class="action-btn" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑 / 排序</div>
+    <h1>🎀 大奇奇的美味指令 🎀</h1>
+    <div class="edit-trigger" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑菜单</div>
 </div>
 
 <div class="tabs">
-    <div class="tab active" onclick="switchTab('bf')">早餐</div>
-    <div class="tab" onclick="switchTab('main')">正餐 (午/晚)</div>
+    <div class="tab active" onclick="switchTab('bf')">☀️ 早餐时光</div>
+    <div class="tab" onclick="switchTab('main')">🍱 午晚正餐</div>
 </div>
 
 <div id="tab-bf" class="section active">
     <div id="container-bf"></div>
-    <button class="btn-full btn-primary" id="add-cat-bf" style="display:none; margin-top:20px;" onclick="addCategory('bf')">+ 新增早餐分类</button>
+    <button class="btn-full btn-primary" id="add-cat-bf" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('bf')">+ 新增早餐种类</button>
 </div>
 
 <div id="tab-main" class="section">
     <div class="settings-panel">
         <div style="display:flex; justify-content:space-between;">
-            <span style="font-weight:700;">☀️ 中餐人数</span>
-            <span class="tools icon-btn" onclick="editLabel('lunchPpl')">重命名</span>
+            <span style="font-weight:800; color:#FFB03B;">👥 中餐几人吃?</span>
+            <span class="tools icon-btn" onclick="editLabel('lunchPpl')">✎</span>
         </div>
         <div class="chip-container" id="chips-lunchPpl"></div>
-        <input type="text" id="input-lunch-extra" placeholder="备注 (土豆/红薯等)" style="margin-top:10px; border:none; border-bottom:1px solid #eee; background:transparent;">
+        <input type="text" id="input-lunch-extra" placeholder="写点备注 (如: 想要吃红薯)" style="margin-top:12px;">
         
-        <div style="height:20px;"></div>
+        <div style="height:25px;"></div>
         
         <div style="display:flex; justify-content:space-between;">
-            <span style="font-weight:700;">🌙 晚餐米饭</span>
-            <span class="tools icon-btn" onclick="editLabel('dinnerRice')">重命名</span>
+            <span style="font-weight:800; color:#8B80F9;">🍚 晚餐要米饭吗?</span>
+            <span class="tools icon-btn" onclick="editLabel('dinnerRice')">✎</span>
         </div>
         <div class="chip-container" id="chips-dinnerRice"></div>
-        <input type="text" id="input-dinner-extra" placeholder="备注 (土豆/红薯等)" style="margin-top:10px; border:none; border-bottom:1px solid #eee; background:transparent;">
+        <input type="text" id="input-dinner-extra" placeholder="写点备注 (如: 想要吃玉米)" style="margin-top:12px;">
     </div>
 
     <div id="container-main"></div>
-    <button class="btn-full btn-primary" id="add-cat-main" style="display:none; margin-top:20px;" onclick="addCategory('main')">+ 新增正餐分类</button>
+    <button class="btn-full btn-primary" id="add-cat-main" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('main')">+ 新增正餐种类</button>
     
-    <div class="cat-wrapper" style="margin-top:20px;">
-        <div class="cat-title">📝 额外备注</div>
-        <textarea id="global-note" rows="3" placeholder="例如：收快递、打扫卫生..." style="margin-top:10px;"></textarea>
+    <div class="cat-wrapper" style="margin-top:25px;">
+        <div class="cat-title" style="font-size:16px; margin-bottom:10px;">💌 给阿姨的悄悄话</div>
+        <textarea id="global-note" rows="3" placeholder="例如：记得收快递、打扫卫生呀..."></textarea>
     </div>
 </div>
 
 <div class="footer">
-    <button class="btn-submit" onclick="generate()">生成微信消息</button>
+    <button class="btn-submit" onclick="generate()">✨ 生成大奇奇的指令 ✨</button>
 </div>
 
 <div id="orderModal" class="modal-overlay">
     <div class="modal-sheet">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
             <span class="sheet-title" id="om-title"></span>
-            <span style="font-size:24px;color:#ccc" onclick="closeModal('orderModal')">×</span>
+            <span style="font-size:28px;color:#E0D8D5; line-height:20px;" onclick="closeModal('orderModal')">×</span>
         </div>
 
         <div id="panel-bf" style="display:none;">
             <div class="meal-section" id="sec-bf" onclick="toggleMeal('bf')">
-                <div class="meal-header"><span>☀️ 早餐吃</span><span id="chk-bf"></span></div>
+                <div class="meal-header"><span>☀️ 早餐吃这个</span><span id="chk-bf" style="color:var(--bf-color)"></span></div>
                 <div class="detail-box" onclick="event.stopPropagation()">
                     <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                        <span style="font-weight:bold;">数量</span>
+                        <span style="font-weight:bold; color:#888;">数量</span>
                         <div class="stepper">
                             <button class="step-btn" onclick="adjQty('bf',-1)">-</button>
-                            <span id="qty-bf" style="font-weight:bold; font-size:18px; width:20px; text-align:center;">1</span>
+                            <span id="qty-bf" style="font-weight:900; font-size:18px; width:25px; text-align:center; color:var(--text-main);">1</span>
                             <button class="step-btn" onclick="adjQty('bf',1)">+</button>
                         </div>
                     </div>
-                    <input type="text" id="note-bf" placeholder="备注 (如: 少糖)">
+                    <input type="text" id="note-bf" placeholder="有啥特殊要求吗? (如: 少糖)">
                 </div>
             </div>
         </div>
 
         <div id="panel-main" style="display:none;">
             <div class="meal-section" id="sec-lunch" onclick="toggleMeal('lunch')">
-                <div class="meal-header"><span>☀️ 午餐吃</span><span id="chk-lunch"></span></div>
+                <div class="meal-header"><span>🍱 午餐吃这个</span><span id="chk-lunch" style="color:var(--lunch-color)"></span></div>
                 <div class="detail-box" onclick="event.stopPropagation()">
                     <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                        <span style="font-weight:bold;">份数</span>
-                        <div class="stepper"><button class="step-btn" onclick="adjQty('lunch',-1)">-</button><span id="qty-lunch" style="font-weight:bold; font-size:18px;">1</span><button class="step-btn" onclick="adjQty('lunch',1)">+</button></div>
+                        <span style="font-weight:bold; color:#888;">份数</span>
+                        <div class="stepper"><button class="step-btn" onclick="adjQty('lunch',-1)">-</button><span id="qty-lunch" style="font-weight:900; font-size:18px; width:25px; text-align:center; color:var(--text-main);">1</span><button class="step-btn" onclick="adjQty('lunch',1)">+</button></div>
                     </div>
-                    <input type="text" id="note-lunch" placeholder="备注 (如: 少辣)">
+                    <input type="text" id="note-lunch" placeholder="特殊要求? (如: 少辣)">
                 </div>
             </div>
             <div class="meal-section" id="sec-dinner" onclick="toggleMeal('dinner')">
-                <div class="meal-header"><span>🌙 晚餐吃</span><span id="chk-dinner"></span></div>
+                <div class="meal-header"><span>🌙 晚餐吃这个</span><span id="chk-dinner" style="color:var(--dinner-color)"></span></div>
                 <div class="detail-box" onclick="event.stopPropagation()">
                     <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                        <span style="font-weight:bold;">份数</span>
-                        <div class="stepper"><button class="step-btn" onclick="adjQty('dinner',-1)">-</button><span id="qty-dinner" style="font-weight:bold; font-size:18px;">1</span><button class="step-btn" onclick="adjQty('dinner',1)">+</button></div>
+                        <span style="font-weight:bold; color:#888;">份数</span>
+                        <div class="stepper"><button class="step-btn" onclick="adjQty('dinner',-1)">-</button><span id="qty-dinner" style="font-weight:900; font-size:18px; width:25px; text-align:center; color:var(--text-main);">1</span><button class="step-btn" onclick="adjQty('dinner',1)">+</button></div>
                     </div>
                     <div class="toggle-row">
                         <div class="toggle-opt selected" id="opt-cook" onclick="setDinnerMode('cook')">👩‍🍳 阿姨做熟</div>
                         <div class="toggle-opt" id="opt-prep" onclick="setDinnerMode('prep')">🔪 帮忙切配</div>
                     </div>
-                    <input type="text" id="note-dinner" placeholder="备注 / 切配详情">
+                    <input type="text" id="note-dinner" placeholder="怎么做? / 怎么切?">
                 </div>
             </div>
         </div>
-        <button class="btn-full btn-primary" onclick="confirmOrder()">确定</button>
+        <button class="btn-full btn-primary" onclick="confirmOrder()">就选它啦！❤️</button>
     </div>
 </div>
 
 <div id="dishModal" class="modal-overlay">
     <div class="modal-sheet">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
             <span class="sheet-title" id="dm-title"></span>
-            <span style="font-size:24px;color:#ccc" onclick="closeModal('dishModal')">×</span>
+            <span style="font-size:28px;color:#E0D8D5; line-height:20px;" onclick="closeModal('dishModal')">×</span>
         </div>
-        <label>菜品名称</label><input type="text" id="dm-name">
-        <label>默认切配/备注</label><input type="text" id="dm-prep">
-        <label>图片 (自动压缩)</label>
-        <label class="upload-area" id="dm-preview" for="file-input"><span>📷 点击上传</span></label>
+        <label style="font-weight:700; margin-bottom:5px; display:block;">菜品名称</label><input type="text" id="dm-name" placeholder="比如: 可乐鸡翅">
+        <label style="font-weight:700; margin-bottom:5px; display:block;">默认备注 (记忆)</label><input type="text" id="dm-prep" placeholder="比如: 切小块">
+        <label style="font-weight:700; margin-bottom:5px; display:block;">美图 (自动压缩)</label>
+        <label class="upload-area" id="dm-preview" for="file-input"><span>📷 点这里传图</span></label>
         <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
         <input type="hidden" id="dm-img-data">
         
-        <div style="display:flex; gap:10px; margin-top:15px;">
+        <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-full btn-danger" id="dm-btn-del" onclick="deleteDish()">删除</button>
-            <button class="btn-full btn-primary" onclick="saveDishTemp()">确定</button>
+            <button class="btn-full btn-primary" onclick="saveDishTemp()">保存好啦</button>
         </div>
     </div>
 </div>
 
 <div id="resultModal" class="modal-overlay">
     <div class="modal-sheet">
-        <div class="sheet-title" style="margin-bottom:15px;">生成结果</div>
-        <textarea id="final-text" style="height:200px;"></textarea>
+        <div class="sheet-title" style="margin-bottom:15px; text-align:center;">💌 生成好啦</div>
+        <textarea id="final-text" style="height:200px; border-color:var(--primary); background:#FFF9F9;"></textarea>
         
         <div class="action-group">
-            <button class="btn-full btn-secondary" onclick="closeModal('resultModal')">🔙 返回修改</button>
-            <button class="btn-full btn-primary" id="btn-copy" onclick="copyText()">📄 复制内容</button>
+            <button class="btn-full btn-secondary" onclick="closeModal('resultModal')">🔙还要改改</button>
+            <button class="btn-full btn-primary" id="btn-copy" onclick="copyText()">📄 复制给阿姨</button>
         </div>
     </div>
 </div>
@@ -287,18 +421,17 @@
 <script>
     // --- 1. 数据核心 ---
     const defaultData = {
-        bf: { "主食": [{n:"绿豆粥"}, {n:"玉米"}], "鸡蛋": [{n:"水煮蛋"}], "饮品": [{n:"牛奶"}] },
-        main: { "肉类": [{n:"红烧肉"}], "素菜": [{n:"炒青菜"}] },
+        bf: { "🥪 每日主食": [{n:"绿豆粥"}, {n:"玉米"}], "🥚 优质蛋白": [{n:"水煮蛋"}], "🥛 每日饮品": [{n:"牛奶"}] },
+        main: { "🍖 大口吃肉": [{n:"红烧肉"}], "🥬 清爽素菜": [{n:"炒青菜"}] },
         options: { lunchPpl: ["2人", "3人"], dinnerRice: ["1人份", "不用"] },
-        labels: { lunchPpl: "中餐人数", dinnerRice: "晚餐米饭" }
+        labels: { lunchPpl: "中餐几人?", dinnerRice: "晚餐米饭" }
     };
     let data = {}; let orders = {}; 
     let orderCtx=null; let editCtx=null;
     let tmpL = ""; let tmpD = ""; 
 
-    // --- 2. 初始化 ---
     function init() {
-        const saved = localStorage.getItem('aygj_v19'); // Key 升级为 V19
+        const saved = localStorage.getItem('aygj_v20'); // 升级Key V20
         if(saved) {
             try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); }
         } else {
@@ -309,32 +442,26 @@
         renderAll();
     }
 
-    // --- 3. 存取函数 (V19新增) ---
     function saveData() {
-        try {
-            localStorage.setItem('aygj_v19', JSON.stringify(data));
-        } catch(e) { console.error("Storage full"); }
+        try { localStorage.setItem('aygj_v20', JSON.stringify(data)); } catch(e) { console.error("Full"); }
     }
 
-    // --- 4. 模式切换 & 手动保存 ---
     function toggleEditMode() {
         const body = document.body;
         const btn = document.getElementById('mainActionBtn');
         
         if (body.classList.contains('edit-mode')) {
-            // 手动保存提示
             saveData();
-            alert("✅ 修改已保存！");
-            
+            alert("❤️ 菜单已经保存好啦！");
             body.classList.remove('edit-mode');
-            btn.innerText = "✎ 编辑 / 排序";
+            btn.innerText = "✎ 编辑菜单";
             btn.classList.remove('saving-mode');
             document.getElementById('add-cat-bf').style.display = 'none';
             document.getElementById('add-cat-main').style.display = 'none';
             renderAll(); 
         } else {
             body.classList.add('edit-mode');
-            btn.innerText = "💾 保存修改";
+            btn.innerText = "💾 保存";
             btn.classList.add('saving-mode');
             document.getElementById('add-cat-bf').style.display = 'block';
             document.getElementById('add-cat-main').style.display = 'block';
@@ -342,7 +469,6 @@
         }
     }
 
-    // --- 5. 渲染系统 ---
     function renderAll() {
         renderTab('bf', 'container-bf');
         renderTab('main', 'container-main');
@@ -367,7 +493,7 @@
                     <span>${cat}</span> 
                     <span class="tools">
                         <span class="icon-btn" onclick="renameCat('${tab}','${cat}')">✎</span>
-                        <span class="icon-btn" style="color:#FF3B30" onclick="delCat('${tab}','${cat}')">🗑</span>
+                        <span class="icon-btn" style="color:#FF6B6B" onclick="delCat('${tab}','${cat}')">🗑</span>
                     </span>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -389,10 +515,8 @@
 
             if (isEdit) {
                 new Sortable(grid, {
-                    animation: 150,
-                    delay: 200, delayOnTouchOnly: true,
-                    ghostClass: 'sortable-ghost',
-                    dragClass: 'sortable-drag',
+                    animation: 200, delay: 200, delayOnTouchOnly: true,
+                    ghostClass: 'sortable-ghost', dragClass: 'sortable-drag',
                     onEnd: (evt) => {
                         const itemData = data[tab][cat].splice(evt.oldIndex, 1)[0];
                         data[tab][cat].splice(evt.newIndex, 0, itemData);
@@ -403,8 +527,7 @@
 
         if (isEdit) {
             new Sortable(container, {
-                animation: 150,
-                handle: '.drag-handle', 
+                animation: 200, handle: '.drag-handle', 
                 onEnd: (evt) => {
                     const newDb = {};
                     container.querySelectorAll('.cat-wrapper').forEach(w => {
@@ -429,7 +552,7 @@
             }
         }
         
-        const imgUrl = item.img || `https://via.placeholder.com/150?text=${item.n[0]}`;
+        const imgUrl = item.img || `https://via.placeholder.com/150/FFF5E8/FF7E67?text=${item.n[0]}`;
         div.className = cls;
         div.innerHTML = `
             <img src="${imgUrl}" class="card-img">
@@ -442,33 +565,30 @@
         return div;
     }
 
-    // --- 业务逻辑 ---
     function addCategory(tab) {
-        const n = prompt("新分类名称");
+        const n = prompt("给新分类起个可爱的名字：");
         if(n) {
             if(!data[tab]) data[tab] = {};
-            if(data[tab][n]) { alert("名称已存在"); return; }
-            data[tab][n] = []; 
-            renderAll();
+            if(data[tab][n]) { alert("这个名字已经有啦~"); return; }
+            data[tab][n] = []; renderAll();
         }
     }
     function renameCat(tab, old) {
-        const n = prompt("修改名称", old);
+        const n = prompt("换个名字", old);
         if(n && n!==old && !data[tab][n]) {
             const items = data[tab][old];
             delete data[tab][old];
-            data[tab][n] = items;
-            renderAll();
+            data[tab][n] = items; renderAll();
         }
     }
     function delCat(tab, cat) {
-        if(confirm(`删除分类【${cat}】？`)) { delete data[tab][cat]; renderAll(); }
+        if(confirm(`确定要删除【${cat}】吗？`)) { delete data[tab][cat]; renderAll(); }
     }
 
     function openDishModal(tab, cat, idx) {
         editCtx = { tab, cat, idx, isNew: idx===-1 };
         const item = idx===-1 ? {n:"", prep:""} : data[tab][cat][idx];
-        document.getElementById('dm-title').innerText = editCtx.isNew ? "添加菜品" : "修改菜品";
+        document.getElementById('dm-title').innerText = editCtx.isNew ? "✨ 添加美食" : "✨ 修改美食";
         document.getElementById('dm-name').value = item.n;
         document.getElementById('dm-prep').value = item.prep || "";
         document.getElementById('dm-preview').style.backgroundImage = item.img ? `url(${item.img})` : "none";
@@ -502,14 +622,13 @@
         closeModal('dishModal'); renderAll();
     }
     function deleteDish() {
-        if(confirm("删除？")) {
+        if(confirm("真的要删掉这个菜吗？")) {
             data[editCtx.tab][editCtx.cat].splice(editCtx.idx, 1);
             delete orders[document.getElementById('dm-name').value];
             closeModal('dishModal'); renderAll();
         }
     }
 
-    // --- V19 核心：点餐 & 智能记忆 ---
     function openOrderModal(item, tab) {
         orderCtx = { item, tab };
         const order = orders[item.n] || {};
@@ -529,15 +648,12 @@
             updateUI('lunch', order.lunch);
             updateUI('dinner', order.dinner);
             
-            // 智能填充逻辑
-            const mode = order.dinner?.mode || 'cook'; // 默认做熟
+            const mode = order.dinner?.mode || 'cook';
             setDinnerMode(mode, false);
             
             if (order.dinner?.note) {
-                // 1. 如果当前订单有备注（比如你刚才填的），优先用它
                 document.getElementById('note-dinner').value = order.dinner.note;
             } else if (mode === 'prep' && item.prep) {
-                // 2. 如果是切配模式，且没有当前备注，自动填入“记忆中”的默认切配
                 document.getElementById('note-dinner').value = item.prep;
             }
         }
@@ -550,7 +666,7 @@
         const cls = t==='bf'?'active-bf':'active';
         sec.classList.toggle(cls);
         if(sec.classList.contains(cls)) {
-            chk.innerHTML = "✓";
+            chk.innerHTML = "❤️"; // 变成爱心
             const qtyId = t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner');
             if(document.getElementById(qtyId).innerText === "0") document.getElementById(qtyId).innerText = "1";
         } else {
@@ -567,7 +683,7 @@
 
         if(d && d.active) {
             sec.classList.add(cls);
-            chk.innerHTML = "✓";
+            chk.innerHTML = "❤️";
             qty.innerText = d.count;
             if(t!=='dinner') note.value = d.note || "";
         } else {
@@ -595,15 +711,8 @@
             if(document.getElementById('sec-dinner').classList.contains('active')) {
                 const mode = document.getElementById('sec-dinner').dataset.mode||'cook';
                 const note = getVal('note-dinner');
-                
                 orders[item.n].dinner = { active:true, count:getQty('dinner'), mode:mode, note:note };
-
-                // --- V19 核心逻辑：自动保存切配习惯 ---
-                if (mode === 'prep' && note) {
-                    item.prep = note; // 更新内存中的默认值
-                    saveData(); // 立即写入永久存储
-                }
-
+                if (mode === 'prep' && note) { item.prep = note; saveData(); }
             } else delete orders[item.n].dinner;
         }
         closeModal('orderModal'); renderAll();
@@ -619,11 +728,10 @@
         document.getElementById('sec-dinner').dataset.mode = m;
         document.getElementById('opt-cook').className = m==='cook'?'toggle-opt selected':'toggle-opt';
         document.getElementById('opt-prep').className = m==='prep'?'toggle-opt selected':'toggle-opt';
-        // UI 更新：如果是切配模式，尝试填入 item.prep
         if(ui) {
             const noteInput = document.getElementById('note-dinner');
             if(m==='prep') noteInput.value = orderCtx.item.prep || "";
-            else noteInput.value = ""; // 切换回做熟，清空（或者你想保留也行，这里清空比较符合直觉）
+            else noteInput.value = ""; 
         }
     }
     
@@ -647,7 +755,7 @@
             };
             el.appendChild(d);
         });
-        const add = document.createElement('div'); add.className="chip"; add.style.border="1px dashed #ccc"; add.innerHTML="+";
+        const add = document.createElement('div'); add.className="chip"; add.style.border="1px dashed #FFD1C7"; add.style.background="white"; add.style.color="var(--primary)"; add.innerHTML="+";
         add.onclick=()=>{ if(document.body.classList.contains('edit-mode')) {const v=prompt("添加"); if(v){data.options[key].push(v); renderSettings();}} };
         el.appendChild(add);
     }
@@ -656,7 +764,7 @@
     
     function generate() {
         const btn = document.getElementById('btn-copy');
-        btn.innerText = "📄 复制内容";
+        btn.innerText = "📄 复制给阿姨";
         btn.style.backgroundColor = "var(--primary)";
 
         let msg = "阿姨，明天饭菜安排：\n";
@@ -686,8 +794,8 @@
         document.getElementById('final-text').select(); 
         document.execCommand('copy'); 
         const btn = document.getElementById('btn-copy');
-        btn.innerText = "✅ 已复制";
-        btn.style.backgroundColor = "#34C759";
+        btn.innerText = "✅ 复制成功啦";
+        btn.style.backgroundColor = "#6BCB77";
     }
     
     function closeModal(id){ document.getElementById(id).classList.remove('show'); }
