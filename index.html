@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>阿姨管家 V16 (完美交互版)</title>
+    <title>阿姨管家 V17 (修复版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         :root {
@@ -15,86 +15,68 @@
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
             background-color: var(--bg); color: var(--text-main); margin: 0;
             padding-bottom: 120px; 
-            -webkit-tap-highlight-color: transparent; 
-            /* 全局禁止选中文字，防止拖拽冲突 */
-            user-select: none; -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
         }
 
-        /* --- 顶部导航栏 (保存按钮完美融合在这里) --- */
+        /* 顶部导航 */
         .header {
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             padding: 12px 20px; position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
         .header h1 { margin: 0; font-size: 18px; font-weight: 800; }
-        
-        /* 这是一个多态按钮：编辑时变色 */
         .action-btn {
             font-size: 14px; color: var(--primary); background: rgba(0,122,255,0.1);
-            padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.3s;
         }
-        /* 编辑模式下的按钮样式 */
-        .action-btn.saving-mode {
-            background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,122,255,0.3);
-        }
+        .action-btn.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
 
         /* 标签页 */
-        .tabs {
-            display: flex; background: var(--card-bg); padding: 4px; margin: 10px 15px;
-            border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        }
-        .tab {
-            flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 600;
-            color: var(--text-sub); border-radius: 10px; transition: 0.2s;
-        }
+        .tabs { display: flex; background: var(--card-bg); padding: 4px; margin: 10px 15px; border-radius: 14px; }
+        .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 600; color: var(--text-sub); border-radius: 10px; }
         .tab.active { background: #E4EBF5; color: var(--primary); }
 
-        /* 内容区 */
         .section { display: none; padding: 0 15px; }
         .section.active { display: block; }
 
-        /* 分类块 */
-        .cat-wrapper { margin-bottom: 20px; }
-        .cat-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 10px 5px; 
-        }
+        /* 分类容器 */
+        .cat-wrapper { margin-bottom: 15px; background: transparent; border-radius: 12px; transition: 0.2s; }
+        /* 编辑模式下，给大类加个背景，看得更清楚 */
+        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 10px; border: 1px dashed #ccc; }
+
+        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; }
         .cat-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
         .cat-title::before { content:''; width:4px; height:16px; background:var(--primary); border-radius:2px; }
         
-        /* 编辑模式下的图标 */
-        .icon-btn { display: none; font-size: 14px; padding: 5px 10px; color: var(--text-sub); }
-        body.edit-mode .icon-btn { display: inline-block; }
-        body.edit-mode .cat-header { background: rgba(0,0,0,0.03); border-radius: 8px; margin-bottom: 8px; } /* 编辑模式下分类头加深背景方便拖拽 */
-
-        /* 菜品网格 */
-        .grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); 
-            gap: 12px; min-height: 20px; 
+        /* 图标按钮组 */
+        .tools { display: none; align-items: center; gap: 10px; }
+        body.edit-mode .tools { display: flex; }
+        .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
+        
+        /* 关键修复：大类拖拽手柄 */
+        .drag-handle {
+            font-size: 22px; color: var(--text-main); cursor: grab; padding: 0 10px;
+            touch-action: none; /* 防止滚动冲突 */
         }
 
-        /* 卡片样式 */
+        /* 菜品网格 */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 12px; min-height: 10px; }
+
         .card {
             background: var(--card-bg); border-radius: var(--radius); overflow: hidden;
             position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            display: flex; flex-direction: column; border: 2px solid transparent;
-            /* 关键：防止iOS长按弹出菜单，确保能拖拽 */
-            -webkit-touch-callout: none; 
-            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; flex-direction: column; 
+            -webkit-touch-callout: none; transition: transform 0.2s;
         }
         .card:active { transform: scale(0.97); }
-        
-        /* 选中状态 */
         .card.sel-bf { border-color: var(--bf-color); background: #F0FFF4; }
         .card.sel-lunch { border-color: var(--lunch-color); background: #FFF8F0; }
         .card.sel-dinner { border-color: var(--dinner-color); background: #F4F4FF; }
         .card.sel-both { border-color: var(--primary); background: #F0F8FF; }
 
-        /* 拖拽时的样式 (SortableJS 自动添加) */
-        .sortable-ghost { opacity: 0.4; background: #eee; }
-        .sortable-drag { transform: scale(1.1); box-shadow: 0 10px 20px rgba(0,0,0,0.2); z-index: 999; opacity: 1; }
+        .sortable-ghost { opacity: 0.4; background: #ddd; }
+        .sortable-drag { transform: scale(1.05); z-index: 999; opacity: 0.9; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 
         .card-img { width: 100%; height: 85px; object-fit: cover; background: #eee; pointer-events: none; }
         .card-body { padding: 10px 6px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
@@ -103,16 +85,16 @@
         .bg-bf { background: var(--bf-color); } .bg-lunch { background: var(--lunch-color); }
         .bg-dinner { background: var(--dinner-color); } .bg-prep { background: #8E8E93; }
 
-        /* 卡片上的删除/编辑遮罩 - 仅编辑模式显示 */
+        /* 编辑遮罩 */
         .card-mask {
             position: absolute; top:0; left:0; width:100%; height:100%;
             background: rgba(255,255,255,0.8); z-index: 10; display: none;
-            align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+            align-items: center; justify-content: center;
         }
         body.edit-mode .card-mask { display: flex; }
-        .mini-btn { font-size: 12px; padding: 4px 10px; border-radius: 15px; border: 1px solid #ccc; background: white; }
+        .mini-btn { font-size: 12px; padding: 6px 12px; border-radius: 15px; border: 1px solid #ccc; background: white; font-weight: bold; }
 
-        /* 底部生成按钮 */
+        /* 底部栏 */
         .footer {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
@@ -137,47 +119,50 @@
             padding-bottom: max(25px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
+
         input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; background: #F9F9F9; font-size: 16px; margin-bottom: 10px; }
         .btn-full { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 5px;}
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: #FF3B30; color: white; }
-        
-        /* 图片上传 */
         .upload-area {
             width: 100%; height: 100px; border: 2px dashed #ccc; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             color: #999; font-weight: 600; margin-bottom: 15px; background-size: contain; background-repeat: no-repeat; background-position: center;
         }
 
+        /* 点餐详情区 (修复展开逻辑) */
+        .meal-section { background: #F9F9F9; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 2px solid transparent; transition: 0.2s; }
+        .meal-section.active { border-color: var(--primary); background: #F0F8FF; }
+        .meal-section.active-bf { border-color: var(--bf-color); background: #F0FFF4; } /* 早餐选中绿底 */
+        
+        .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; }
+        
+        /* 默认隐藏详情 */
+        .detail-box { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); }
+        /* 选中后显示详情 (关键CSS) */
+        .meal-section.active .detail-box, 
+        .meal-section.active-bf .detail-box { display: block; }
+
+        .stepper { display: flex; gap: 15px; align-items: center; }
+        .step-btn { width: 32px; height: 32px; background: white; border: 1px solid #ddd; border-radius: 50%; font-weight: bold; font-size: 18px; display:flex; align-items:center; justify-content:center;}
+        .toggle-row { display: flex; background: #EEE; padding: 3px; border-radius: 8px; margin-bottom: 10px; }
+        .toggle-opt { flex: 1; text-align: center; padding: 8px; font-size: 13px; border-radius: 6px; color: #888; }
+        .toggle-opt.selected { background: white; color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
         /* 设置面板 */
         .settings-panel { background: var(--card-bg); padding: 15px; border-radius: var(--radius); margin-bottom: 15px; }
         .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;}
         .chip { padding: 6px 12px; background: #F2F2F7; border-radius: 18px; font-size: 13px; position: relative; }
-        .chip.active { color: white; }
-        .chip.lunch-active { background: var(--lunch-color); }
-        .chip.dinner-active { background: var(--dinner-color); }
+        .chip.lunch-active { background: var(--lunch-color); color: white; }
+        .chip.dinner-active { background: var(--dinner-color); color: white; }
         .chip-del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #FF3B30; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold;}
         body.edit-mode .chip-del { display: flex; }
-
-        /* 点餐详情组件 */
-        .meal-section { background: #F9F9F9; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 2px solid transparent; }
-        .meal-section.active { border-color: var(--primary); background: #F0F8FF; }
-        .meal-section.active-bf { border-color: var(--bf-color); background: #F0FFF4; }
-        .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-        .detail-box { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #rgba(0,0,0,0.05); }
-        .meal-section.active .detail-box, .meal-section.active-bf .detail-box { display: block; }
-        .stepper { display: flex; gap: 10px; align-items: center; }
-        .step-btn { width: 28px; height: 28px; background: #eee; border: none; border-radius: 50%; font-weight: bold; font-size: 16px;}
-        .toggle-row { display: flex; background: #EEE; padding: 3px; border-radius: 8px; margin-bottom: 10px; }
-        .toggle-opt { flex: 1; text-align: center; padding: 6px; font-size: 13px; border-radius: 6px; color: #888; }
-        .toggle-opt.selected { background: white; color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>🍱 阿姨管家 V16</h1>
+    <h1>🍱 阿姨管家 V17</h1>
     <div class="action-btn" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑 / 排序</div>
 </div>
 
@@ -194,17 +179,17 @@
 <div id="tab-main" class="section">
     <div class="settings-panel">
         <div style="display:flex; justify-content:space-between;">
-            <span style="font-weight:700; font-size:14px;">☀️ 中餐人数</span>
-            <span class="icon-btn" onclick="editLabel('lunchPpl')">重命名</span>
+            <span style="font-weight:700;">☀️ 中餐人数</span>
+            <span class="tools icon-btn" onclick="editLabel('lunchPpl')">重命名</span>
         </div>
         <div class="chip-container" id="chips-lunchPpl"></div>
         <input type="text" id="input-lunch-extra" placeholder="备注 (土豆/红薯等)" style="margin-top:10px; border:none; border-bottom:1px solid #eee; background:transparent;">
         
-        <div style="height:15px;"></div>
+        <div style="height:20px;"></div>
         
         <div style="display:flex; justify-content:space-between;">
-            <span style="font-weight:700; font-size:14px;">🌙 晚餐米饭</span>
-            <span class="icon-btn" onclick="editLabel('dinnerRice')">重命名</span>
+            <span style="font-weight:700;">🌙 晚餐米饭</span>
+            <span class="tools icon-btn" onclick="editLabel('dinnerRice')">重命名</span>
         </div>
         <div class="chip-container" id="chips-dinnerRice"></div>
         <input type="text" id="input-dinner-extra" placeholder="备注 (土豆/红薯等)" style="margin-top:10px; border:none; border-bottom:1px solid #eee; background:transparent;">
@@ -230,33 +215,40 @@
             <span style="font-size:24px;color:#ccc" onclick="closeModal('orderModal')">×</span>
         </div>
 
-        <div id="panel-bf">
+        <div id="panel-bf" style="display:none;">
             <div class="meal-section" id="sec-bf" onclick="toggleMeal('bf')">
-                <div class="meal-header"><span>☀️ 早餐吃</span><span id="chk-bf" style="color:var(--bf-color)"></span></div>
+                <div class="meal-header"><span>☀️ 早餐吃</span><span id="chk-bf"></span></div>
                 <div class="detail-box" onclick="event.stopPropagation()">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>数量</span><div class="stepper"><button class="step-btn" onclick="adjQty('bf',-1)">-</button><span id="qty-bf">1</span><button class="step-btn" onclick="adjQty('bf',1)">+</button></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                        <span style="font-weight:bold;">数量</span>
+                        <div class="stepper">
+                            <button class="step-btn" onclick="adjQty('bf',-1)">-</button>
+                            <span id="qty-bf" style="font-weight:bold; font-size:18px; width:20px; text-align:center;">1</span>
+                            <button class="step-btn" onclick="adjQty('bf',1)">+</button>
+                        </div>
                     </div>
                     <input type="text" id="note-bf" placeholder="备注 (如: 少糖)">
                 </div>
             </div>
         </div>
 
-        <div id="panel-main">
+        <div id="panel-main" style="display:none;">
             <div class="meal-section" id="sec-lunch" onclick="toggleMeal('lunch')">
-                <div class="meal-header"><span>☀️ 午餐吃</span><span id="chk-lunch" style="color:var(--lunch-color)"></span></div>
+                <div class="meal-header"><span>☀️ 午餐吃</span><span id="chk-lunch"></span></div>
                 <div class="detail-box" onclick="event.stopPropagation()">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>份数</span><div class="stepper"><button class="step-btn" onclick="adjQty('lunch',-1)">-</button><span id="qty-lunch">1</span><button class="step-btn" onclick="adjQty('lunch',1)">+</button></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                        <span style="font-weight:bold;">份数</span>
+                        <div class="stepper"><button class="step-btn" onclick="adjQty('lunch',-1)">-</button><span id="qty-lunch" style="font-weight:bold; font-size:18px;">1</span><button class="step-btn" onclick="adjQty('lunch',1)">+</button></div>
                     </div>
                     <input type="text" id="note-lunch" placeholder="备注 (如: 少辣)">
                 </div>
             </div>
             <div class="meal-section" id="sec-dinner" onclick="toggleMeal('dinner')">
-                <div class="meal-header"><span>🌙 晚餐吃</span><span id="chk-dinner" style="color:var(--dinner-color)"></span></div>
+                <div class="meal-header"><span>🌙 晚餐吃</span><span id="chk-dinner"></span></div>
                 <div class="detail-box" onclick="event.stopPropagation()">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>份数</span><div class="stepper"><button class="step-btn" onclick="adjQty('dinner',-1)">-</button><span id="qty-dinner">1</span><button class="step-btn" onclick="adjQty('dinner',1)">+</button></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                        <span style="font-weight:bold;">份数</span>
+                        <div class="stepper"><button class="step-btn" onclick="adjQty('dinner',-1)">-</button><span id="qty-dinner" style="font-weight:bold; font-size:18px;">1</span><button class="step-btn" onclick="adjQty('dinner',1)">+</button></div>
                     </div>
                     <div class="toggle-row">
                         <div class="toggle-opt selected" id="opt-cook" onclick="setDinnerMode('cook')">👩‍🍳 阿姨做熟</div>
@@ -299,7 +291,7 @@
 </div>
 
 <script>
-    // --- 数据 ---
+    // --- 1. 数据核心 ---
     const defaultData = {
         bf: { "主食": [{n:"绿豆粥"}, {n:"玉米"}], "鸡蛋": [{n:"水煮蛋"}], "饮品": [{n:"牛奶"}] },
         main: { "肉类": [{n:"红烧肉"}], "素菜": [{n:"炒青菜"}] },
@@ -308,52 +300,53 @@
     };
     let data = {}; let orders = {}; 
     let orderCtx=null; let editCtx=null;
+    let tmpL = ""; let tmpD = ""; // 临时存储选中的人数
 
-    // --- 初始化 ---
+    // --- 2. 初始化 ---
     function init() {
-        const saved = localStorage.getItem('aygj_v16');
-        if(saved) try{ data = JSON.parse(saved); }catch(e){ data=JSON.parse(JSON.stringify(defaultData)); }
-        else data = JSON.parse(JSON.stringify(defaultData));
+        const saved = localStorage.getItem('aygj_v17');
+        if(saved) {
+            try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); }
+        } else {
+            data = JSON.parse(JSON.stringify(defaultData));
+        }
+        // 确保数据结构完整（修复早餐可能缺失的问题）
+        if(!data.bf) data.bf = {};
+        if(!data.main) data.main = {};
+        
         renderAll();
     }
-    
-    // --- 核心逻辑：切换编辑模式 (集成保存) ---
+
+    // --- 3. 模式切换 & 保存 ---
     function toggleEditMode() {
         const body = document.body;
         const btn = document.getElementById('mainActionBtn');
         
         if (body.classList.contains('edit-mode')) {
-            // 动作：保存并退出
-            saveDataReal();
+            // 保存并退出
+            try {
+                localStorage.setItem('aygj_v17', JSON.stringify(data));
+                alert("✅ 修改已保存！");
+            } catch(e) { alert("保存失败，可能是图片太多了。"); }
+            
             body.classList.remove('edit-mode');
             btn.innerText = "✎ 编辑 / 排序";
             btn.classList.remove('saving-mode');
             document.getElementById('add-cat-bf').style.display = 'none';
             document.getElementById('add-cat-main').style.display = 'none';
-            
-            // 重新渲染以移除拖拽功能 (恢复点击点餐)
-            renderAll(); 
+            renderAll(); // 重新渲染去掉拖拽手柄
         } else {
-            // 动作：进入编辑
+            // 进入编辑
             body.classList.add('edit-mode');
             btn.innerText = "💾 保存修改";
             btn.classList.add('saving-mode');
             document.getElementById('add-cat-bf').style.display = 'block';
             document.getElementById('add-cat-main').style.display = 'block';
-            
-            // 重新渲染以激活拖拽
-            renderAll();
+            renderAll(); // 重新渲染显示手柄
         }
     }
 
-    function saveDataReal() {
-        try {
-            localStorage.setItem('aygj_v16', JSON.stringify(data));
-            alert("✅ 所有修改已保存！");
-        } catch(e) { alert("保存失败，可能是图片太多了。"); }
-    }
-
-    // --- 渲染 ---
+    // --- 4. 渲染系统 ---
     function renderAll() {
         renderTab('bf', 'container-bf');
         renderTab('main', 'container-main');
@@ -366,17 +359,27 @@
         const isEdit = document.body.classList.contains('edit-mode');
         const db = data[tab];
 
-        // 渲染分类
+        // 遍历分类
         for (let cat in db) {
             const wrapper = document.createElement('div');
             wrapper.className = "cat-wrapper";
-            wrapper.dataset.cat = cat; // 供大类排序用
+            wrapper.dataset.cat = cat; 
 
             const header = document.createElement('div');
             header.className = "cat-header";
+            // 修复重点：添加了 drag-handle (≡)
             header.innerHTML = `
-                <div class="cat-title"><span>${cat}</span> <span class="icon-btn" onclick="renameCat('${tab}','${cat}')">✎</span> <span class="icon-btn" style="color:#FF3B30" onclick="delCat('${tab}','${cat}')">🗑</span></div>
-                <div class="icon-btn" style="color:var(--primary);font-weight:bold;" onclick="openDishModal('${tab}','${cat}',-1)">+ 加菜</div>
+                <div class="cat-title">
+                    <span>${cat}</span> 
+                    <span class="tools">
+                        <span class="icon-btn" onclick="renameCat('${tab}','${cat}')">✎</span>
+                        <span class="icon-btn" style="color:#FF3B30" onclick="delCat('${tab}','${cat}')">🗑</span>
+                    </span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="tools icon-btn" style="color:var(--primary);font-weight:bold;" onclick="openDishModal('${tab}','${cat}',-1)">+ 加菜</span>
+                    ${isEdit ? '<span class="drag-handle">≡</span>' : ''}
+                </div>
             `;
             
             const grid = document.createElement('div');
@@ -390,17 +393,14 @@
             wrapper.appendChild(grid);
             container.appendChild(wrapper);
 
-            // 绑定菜品拖拽 (仅编辑模式)
+            // 菜品拖拽 (仅编辑模式)
             if (isEdit) {
                 new Sortable(grid, {
-                    group: 'dishes-'+tab, // 允许跨分类拖拽(如果需要可以开启，这里暂不开启)
                     animation: 150,
-                    delay: 200, // 长按200ms
-                    delayOnTouchOnly: true,
+                    delay: 200, delayOnTouchOnly: true, // 长按拖拽菜品
                     ghostClass: 'sortable-ghost',
                     dragClass: 'sortable-drag',
                     onEnd: (evt) => {
-                        // 拖拽结束，更新数据
                         const itemData = data[tab][cat].splice(evt.oldIndex, 1)[0];
                         data[tab][cat].splice(evt.newIndex, 0, itemData);
                     }
@@ -408,18 +408,16 @@
             }
         }
 
-        // 绑定大类拖拽
+        // 大类拖拽 (修复重点：使用 handle)
         if (isEdit) {
             new Sortable(container, {
                 animation: 150,
-                handle: '.cat-header', // 只能按住标题拖动
+                handle: '.drag-handle', // 只有按住这个图标才能拖拽大类
                 onEnd: (evt) => {
-                    // 简单的重新构建对象来排序
+                    // 重建对象顺序
                     const newDb = {};
-                    const wrappers = container.querySelectorAll('.cat-wrapper');
-                    wrappers.forEach(w => {
-                        const cName = w.dataset.cat;
-                        newDb[cName] = data[tab][cName];
+                    container.querySelectorAll('.cat-wrapper').forEach(w => {
+                        newDb[w.dataset.cat] = data[tab][w.dataset.cat];
                     });
                     data[tab] = newDb;
                 }
@@ -432,11 +430,11 @@
         const order = orders[item.n];
         let cls = "card"; let badges = "";
         if(order) {
-            if(order.bf?.active) { cls+=" sel-bf"; badges+=`<span class="badge bg-bf">早</span>`; }
-            if(order.lunch?.active) { cls+=" sel-lunch"; badges+=`<span class="badge bg-lunch">午</span>`; }
+            if(order.bf?.active) { cls+=" sel-bf"; badges+=`<span class="badge bg-bf">早${order.bf.count>1?'x'+order.bf.count:''}</span>`; }
+            if(order.lunch?.active) { cls+=" sel-lunch"; badges+=`<span class="badge bg-lunch">午${order.lunch.count>1?'x'+order.lunch.count:''}</span>`; }
             if(order.dinner?.active) { 
                 if(cls.includes("sel-lunch")) cls="card sel-both"; else cls+=" sel-dinner";
-                badges+=`<span class="badge ${order.dinner.mode==='prep'?'bg-prep':'bg-dinner'}">${order.dinner.mode==='prep'?'切':'晚'}</span>`;
+                badges+=`<span class="badge ${order.dinner.mode==='prep'?'bg-prep':'bg-dinner'}">${order.dinner.mode==='prep'?'切':'晚'}${order.dinner.count>1?'x'+order.dinner.count:''}</span>`;
             }
         }
         
@@ -449,30 +447,34 @@
                 <div class="mini-btn" onclick="event.stopPropagation();openDishModal('${tab}','${cat}',${idx})">✎ 修改</div>
             </div>
         `;
-        // 正常模式点击点餐，编辑模式无点击(由Sortable接管)
         div.onclick = () => { if(!document.body.classList.contains('edit-mode')) openOrderModal(item, tab); };
         return div;
     }
 
-    // --- 业务逻辑: 分类 ---
+    // --- 5. 业务逻辑：大类管理 ---
     function addCategory(tab) {
         const n = prompt("新分类名称");
-        if(n && !data[tab][n]) { data[tab][n]=[]; renderAll(); }
+        if(n) {
+            if(!data[tab]) data[tab] = {};
+            if(data[tab][n]) { alert("名称已存在"); return; }
+            data[tab][n] = []; // 初始化为空数组
+            renderAll();
+        }
     }
     function renameCat(tab, old) {
         const n = prompt("修改名称", old);
         if(n && n!==old && !data[tab][n]) {
             const items = data[tab][old];
             delete data[tab][old];
-            data[tab][n] = items; // 注意：JS对象顺序可能变，但在我们下一次保存拖拽后会修复
+            data[tab][n] = items;
             renderAll();
         }
     }
     function delCat(tab, cat) {
-        if(confirm(`删除分类【${cat}】及所有菜品？`)) { delete data[tab][cat]; renderAll(); }
+        if(confirm(`删除分类【${cat}】？`)) { delete data[tab][cat]; renderAll(); }
     }
 
-    // --- 业务逻辑: 菜品编辑 ---
+    // --- 6. 业务逻辑：菜品编辑 ---
     function openDishModal(tab, cat, idx) {
         editCtx = { tab, cat, idx, isNew: idx===-1 };
         const item = idx===-1 ? {n:"", prep:""} : data[tab][cat][idx];
@@ -488,7 +490,6 @@
         if(input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                // 压缩
                 const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
                     const cvs = document.createElement('canvas');
@@ -513,71 +514,116 @@
     function deleteDish() {
         if(confirm("删除？")) {
             data[editCtx.tab][editCtx.cat].splice(editCtx.idx, 1);
-            delete orders[editCtx.n]; // 尝试删关联订单
+            delete orders[document.getElementById('dm-name').value];
             closeModal('dishModal'); renderAll();
         }
     }
 
-    // --- 业务逻辑: 点餐 & 设置 (维持原有逻辑简化版) ---
+    // --- 7. 业务逻辑：点餐 (修复早餐份数显示) ---
     function openOrderModal(item, tab) {
         orderCtx = { item, tab };
         const order = orders[item.n] || {};
         document.getElementById('om-title').innerText = item.n;
+        
         document.getElementById('panel-bf').style.display = tab==='bf'?'block':'none';
         document.getElementById('panel-main').style.display = tab==='main'?'block':'none';
         
-        if(tab==='bf') updateUI('bf', order.bf);
-        else { updateUI('lunch', order.lunch); updateUI('dinner', order.dinner); 
-               setDinnerMode(order.dinner?.mode||'cook', false); 
-               document.getElementById('note-dinner').value = order.dinner?.note || (order.dinner?.mode==='prep'?item.prep:'') || ""; }
-        
+        // 重置所有输入
+        document.getElementById('note-bf').value = "";
+        document.getElementById('note-lunch').value = "";
+        document.getElementById('note-dinner').value = "";
+
+        if(tab === 'bf') {
+            updateUI('bf', order.bf);
+            // 修复体验：如果是新打开且没点过，自动展开让用户选份数
+            if (!order.bf || !order.bf.active) {
+               toggleMeal('bf'); // 自动帮你点一下展开
+            }
+        } else {
+            updateUI('lunch', order.lunch);
+            updateUI('dinner', order.dinner);
+            setDinnerMode(order.dinner?.mode||'cook', false);
+            if(order.dinner?.note) document.getElementById('note-dinner').value = order.dinner.note;
+            else if(order.dinner?.mode==='prep') document.getElementById('note-dinner').value = item.prep||"";
+        }
         document.getElementById('orderModal').classList.add('show');
     }
+
+    function toggleMeal(t) {
+        const sec = document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner'));
+        const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner'));
+        const cls = t==='bf'?'active-bf':'active';
+        
+        // 切换类
+        sec.classList.toggle(cls);
+        
+        // 视觉反馈
+        if(sec.classList.contains(cls)) {
+            chk.innerHTML = "✓";
+            // 如果是刚打开，重置数量为1
+            const qtyId = t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner');
+            if(document.getElementById(qtyId).innerText === "0") document.getElementById(qtyId).innerText = "1";
+        } else {
+            chk.innerHTML = "";
+        }
+    }
+
     function updateUI(t, d) {
         const sec = document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner'));
         const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner'));
         const qty = document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner'));
         const note = document.getElementById(t==='bf'?'note-bf':(t==='lunch'?'note-lunch':'note-dinner'));
-        
+        const cls = t==='bf'?'active-bf':'active';
+
         if(d && d.active) {
-            sec.classList.add(t==='bf'?'active-bf':'active'); chk.innerText="✓"; qty.innerText=d.count; 
-            if(t!=='dinner') note.value=d.note||"";
+            sec.classList.add(cls);
+            chk.innerHTML = "✓";
+            qty.innerText = d.count;
+            if(t!=='dinner') note.value = d.note || "";
         } else {
-            sec.classList.remove(t==='bf'?'active-bf':'active'); chk.innerText=""; qty.innerText=1; 
-            if(t!=='dinner') note.value="";
+            sec.classList.remove(cls);
+            chk.innerHTML = "";
+            qty.innerText = "1";
         }
     }
+
     function confirmOrder() {
         const item = orderCtx.item;
         if(!orders[item.n]) orders[item.n] = {};
         
-        if(orderCtx.tab==='bf') {
-            if(document.getElementById('sec-bf').classList.contains('active-bf'))
-                orders[item.n].bf={active:true, count:getQty('bf'), note:getVal('note-bf')};
-            else delete orders[item.n].bf;
-        } else {
-            if(document.getElementById('sec-lunch').classList.contains('active'))
-                orders[item.n].lunch={active:true, count:getQty('lunch'), note:getVal('note-lunch')};
-            else delete orders[item.n].lunch;
+        // 早餐逻辑
+        if(orderCtx.tab === 'bf') {
+            if(document.getElementById('sec-bf').classList.contains('active-bf')) {
+                orders[item.n].bf = { active:true, count:getQty('bf'), note:getVal('note-bf') };
+            } else {
+                delete orders[item.n].bf;
+            }
+        } 
+        // 正餐逻辑
+        else {
+            if(document.getElementById('sec-lunch').classList.contains('active')) {
+                orders[item.n].lunch = { active:true, count:getQty('lunch'), note:getVal('note-lunch') };
+            } else delete orders[item.n].lunch;
             
             if(document.getElementById('sec-dinner').classList.contains('active')) {
-                const mode = document.getElementById('sec-dinner').dataset.mode||'cook';
-                orders[item.n].dinner={active:true, count:getQty('dinner'), mode, note:getVal('note-dinner')};
+                orders[item.n].dinner = { 
+                    active:true, 
+                    count:getQty('dinner'), 
+                    mode:document.getElementById('sec-dinner').dataset.mode||'cook', 
+                    note:getVal('note-dinner') 
+                };
             } else delete orders[item.n].dinner;
         }
+        
         closeModal('orderModal'); renderAll();
     }
-    
+
     // --- 辅助函数 ---
     function getQty(t) { return parseInt(document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')).innerText); }
     function getVal(id) { return document.getElementById(id).value; }
-    function toggleMeal(t) { 
-        const sec = document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner'));
-        const cls = t==='bf'?'active-bf':'active';
-        sec.classList.toggle(cls);
-        // update Check icon
-        const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner'));
-        chk.innerText = sec.classList.contains(cls) ? "✓" : "";
+    function adjQty(t, d) {
+        const el = document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner'));
+        let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v;
     }
     function setDinnerMode(m, ui=true) {
         document.getElementById('sec-dinner').dataset.mode = m;
@@ -585,22 +631,26 @@
         document.getElementById('opt-prep').className = m==='prep'?'toggle-opt selected':'toggle-opt';
         if(ui) document.getElementById('note-dinner').value = m==='prep'?(orderCtx.item.prep||""):"";
     }
-    function adjQty(t, d) {
-        const el = document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner'));
-        let v=parseInt(el.innerText)+d; if(v<1)v=1; el.innerText=v;
-    }
+    
+    // --- 设置 & 生成 ---
     function renderSettings() {
         renderChips('chips-lunchPpl', data.options.lunchPpl, 'lunchPpl');
         renderChips('chips-dinnerRice', data.options.dinnerRice, 'dinnerRice');
     }
     function renderChips(id, list, key) {
-        const el=document.getElementById(id); el.innerHTML="";
+        const el = document.getElementById(id); el.innerHTML="";
         list.forEach((txt, i)=>{
-            const isSel = (key==='lunchPpl'&&window.tmpL===txt)||(key==='dinnerRice'&&window.tmpD===txt);
-            const d = document.createElement('div'); 
-            d.className=`chip ${isSel?(key==='lunchPpl'?'lunch-active':'dinner-active'):''}`;
+            const isSel = (key==='lunchPpl' && tmpL===txt) || (key==='dinnerRice' && tmpD===txt);
+            const d = document.createElement('div');
+            d.className = `chip ${isSel ? (key==='lunchPpl'?'lunch-active':'dinner-active') : ''}`;
             d.innerHTML = `${txt}<div class="chip-del" onclick="event.stopPropagation();delOpt('${key}',${i})">×</div>`;
-            d.onclick=()=>{ if(!document.body.classList.contains('edit-mode')){ if(key==='lunchPpl')window.tmpL=txt; else window.tmpD=txt; renderSettings(); }};
+            d.onclick = () => {
+                if(!document.body.classList.contains('edit-mode')) {
+                    if(key==='lunchPpl') tmpL = (tmpL===txt?"":txt);
+                    else tmpD = (tmpD===txt?"":txt);
+                    renderSettings();
+                }
+            };
             el.appendChild(d);
         });
         const add = document.createElement('div'); add.className="chip"; add.style.border="1px dashed #ccc"; add.innerHTML="+";
@@ -609,22 +659,28 @@
     }
     function delOpt(k,i) { data.options[k].splice(i,1); renderSettings(); }
     function editLabel(k) { const v=prompt("新标题", data.labels[k]); if(v){data.labels[k]=v; renderSettings();} }
+    
     function generate() {
         let msg = "阿姨，明天饭菜安排：\n";
-        // 简单生成逻辑 (省略部分代码以保持长度，逻辑同V15)
         let bf=[], lu=[], di=[];
+        
         for(let k in orders) {
-            if(orders[k].bf?.active) bf.push(`${k}${orders[k].bf.count>1?'x'+orders[k].bf.count:''}`);
-            if(orders[k].lunch?.active) lu.push(`${k}${orders[k].lunch.count>1?'x'+orders[k].lunch.count:''}`);
+            if(orders[k].bf?.active) bf.push(`${k}${orders[k].bf.count>1?' x'+orders[k].bf.count:''} ${orders[k].bf.note?('('+orders[k].bf.note+')'):''}`);
+            if(orders[k].lunch?.active) lu.push(`${k}${orders[k].lunch.count>1?' x'+orders[k].lunch.count:''} ${orders[k].lunch.note?('('+orders[k].lunch.note+')'):''}`);
             if(orders[k].dinner?.active) {
                 const d=orders[k].dinner;
-                di.push(`${d.mode==='prep'?'🔪':'🍳'}${k}${d.count>1?'x'+d.count:''} ${d.note||''}`);
+                di.push(`${d.mode==='prep'?'🔪 ':'🍳 '}${k}${d.count>1?' x'+d.count:''} ${d.note?('('+d.note+')'):''}`);
             }
         }
-        if(bf.length) msg+=`\n☀️早餐: ${bf.join(', ')}`;
-        if(lu.length||window.tmpL) msg+=`\n🍱中餐: ${window.tmpL||''} ${lu.join(', ')} ${document.getElementById('input-lunch-extra').value}`;
-        if(di.length||window.tmpD) msg+=`\n🌙晚餐: ${window.tmpD||''} ${di.join('\n')}\n${document.getElementById('input-dinner-extra').value}`;
-        msg+=`\n备注: ${document.getElementById('global-note').value}`;
+        
+        if(bf.length) msg+=`\n☀️【早餐】\n${bf.join('，')}`;
+        if(lu.length||tmpL) msg+=`\n\n🍱【中餐】${tmpL?(' '+tmpL):''}\n${lu.join('，')}${document.getElementById('input-lunch-extra').value?('\n补充: '+document.getElementById('input-lunch-extra').value):''}`;
+        if(di.length||tmpD) msg+=`\n\n🌙【晚餐】${tmpD?(' 米饭:'+tmpD):''}\n${di.join('\n')}${document.getElementById('input-dinner-extra').value?('\n补充: '+document.getElementById('input-dinner-extra').value):''}`;
+        
+        const gn = document.getElementById('global-note').value;
+        if(gn) msg+=`\n\n📝【备注】\n${gn}`;
+        msg+="\n\n辛苦阿姨了！";
+        
         document.getElementById('final-text').value=msg; document.getElementById('resultModal').classList.add('show');
     }
     function copyText(){ document.getElementById('final-text').select(); document.execCommand('copy'); alert("已复制"); }
@@ -635,6 +691,7 @@
         document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');
         document.getElementById('tab-'+t).classList.add('active');
     }
+
     init();
 </script>
 </body>
