@@ -6,7 +6,7 @@
     <title>大奇奇的美味指令</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        /* --- V22 样式保持温馨风格不变 --- */
+        /* --- V25 无限链接版 (样式保持温馨风格) --- */
         :root {
             --primary: #FF7E67; --bg: #FFF9F2; --card-bg: #FFFFFF;
             --text-main: #5D5550; --text-sub: #9E948D;
@@ -20,24 +20,27 @@
             user-select: none; -webkit-user-select: none;
         }
         .header {
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px);
             padding: 15px 20px; position: sticky; top: 0; z-index: 100;
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; justify-content: center; align-items: center;
             border-bottom: 1px solid rgba(0,0,0,0.02); box-shadow: 0 2px 15px rgba(0,0,0,0.03);
         }
-        .header h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
-        .edit-trigger {
-            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-            font-size: 13px; background: #FFF0EB; color: var(--primary);
+        .header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
+        .header-btn-left { position: absolute; left: 20px; font-size: 20px; cursor: pointer; padding: 5px; }
+        .header-btn-right {
+            position: absolute; right: 20px; font-size: 13px; background: #FFF0EB; color: var(--primary);
             padding: 6px 12px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.3s;
         }
-        .edit-trigger.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 126, 103, 0.3); }
+        .header-btn-right.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 126, 103, 0.3); }
+
         .tabs { display: flex; background: rgba(255,255,255,0.6); padding: 6px; margin: 15px 20px; border-radius: 25px; }
         .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 15px; font-weight: 700; color: var(--text-sub); border-radius: 20px; transition: 0.3s;}
         .tab.active { background: #FFFFFF; color: var(--primary); box-shadow: 0 2px 10px rgba(0,0,0,0.05);}
+
         .section { display: none; padding: 0 20px; }
         .section.active { display: block; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 15px; min-height: 10px; }
+        
         .cat-wrapper { margin-bottom: 20px; background: transparent; border-radius: var(--radius); transition: 0.2s; }
         body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.6); padding: 10px; border: 2px dashed #FFD1C7; }
         .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 5px;}
@@ -47,6 +50,7 @@
         body.edit-mode .tools { display: flex; }
         .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
         .drag-handle { font-size: 20px; color: #D1C7C0; cursor: grab; padding: 0 10px; touch-action: none; }
+
         .card {
             background: var(--card-bg); border-radius: var(--radius); overflow: hidden;
             position: relative; box-shadow: var(--shadow);
@@ -61,61 +65,48 @@
         .card-body { padding: 12px 8px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
         .card-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #5D5550; }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin: 2px; font-weight: 600;}
-        .bg-bf { background: var(--bf-color); } .bg-lunch { background: var(--lunch-color); }
-        .bg-dinner { background: var(--dinner-color); } .bg-prep { background: #B8B2A9; }
+        .bg-bf { background: var(--bf-color); } .bg-lunch { background: var(--lunch-color); } .bg-dinner { background: var(--dinner-color); } .bg-prep { background: #B8B2A9; }
         
-        /* 修复遮罩：只遮图片 */
         .card-mask {
             position: absolute; top:0; left:0; width:100%; height:90px;
             background: rgba(255,255,255,0.6); z-index: 10; display: none;
             align-items: center; justify-content: center; backdrop-filter: blur(1px);
         }
         body.edit-mode .card-mask { display: flex; }
-        .mini-btn { 
-            font-size: 13px; padding: 6px 15px; border-radius: 20px; border: none; 
-            background: white; color: var(--primary); border: 1px solid var(--primary);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-weight: bold; 
-        }
+        .mini-btn { font-size: 12px; padding: 4px 10px; border-radius: 15px; background: white; color: var(--primary); border: 1px solid var(--primary); font-weight: bold; }
+
         .settings-panel { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
         .chip-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;}
         .chip { padding: 8px 15px; background: #F7F4F2; border-radius: 20px; font-size: 13px; position: relative; color: #6D635E; font-weight: 600;}
-        .chip.bf-active { background: var(--bf-color); color: white; box-shadow: 0 3px 10px rgba(107, 203, 119, 0.3); }
-        .chip.lunch-active { background: var(--lunch-color); color: white; box-shadow: 0 3px 10px rgba(255, 176, 59, 0.3); }
-        .chip.dinner-active { background: var(--dinner-color); color: white; box-shadow: 0 3px 10px rgba(139, 128, 249, 0.3); }
+        .chip.bf-active { background: var(--bf-color); color: white; }
+        .chip.lunch-active { background: var(--lunch-color); color: white; }
+        .chip.dinner-active { background: var(--dinner-color); color: white; }
         .chip-del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #FF6B6B; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border: 2px solid white;}
         body.edit-mode .chip-del { display: flex; }
+
         .footer {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
             padding: 15px 25px; z-index: 200; padding-bottom: max(15px, env(safe-area-inset-bottom));
             box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
         }
-        .btn-submit {
-            width: 100%; background: var(--primary); color: white; border: none;
-            padding: 16px; border-radius: 30px; font-weight: 700; font-size: 17px;
-            box-shadow: 0 8px 20px rgba(255, 126, 103, 0.3); letter-spacing: 1px;
-        }
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(93, 85, 80, 0.4); z-index: 300; display: none; align-items: flex-end; justify-content: center;
-        }
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 30px; font-weight: 700; font-size: 17px; box-shadow: 0 8px 20px rgba(255, 126, 103, 0.3); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(93, 85, 80, 0.4); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
         .modal-overlay.show { display: flex; }
-        .modal-sheet {
-            background: #FFFFFF; width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; padding: 25px;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1); animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-            padding-bottom: max(30px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        input, textarea { width: 100%; padding: 14px; border: 2px solid #F2EEEA; border-radius: 16px; box-sizing: border-box; background: #FCFAF8; font-size: 16px; margin-bottom: 12px; color: var(--text-main);}
+        .modal-sheet { background: #FFFFFF; width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; padding: 25px; padding-bottom: max(30px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; }
+        
+        input, textarea { width: 100%; padding: 12px; border: 2px solid #F2EEEA; border-radius: 12px; box-sizing: border-box; background: #FCFAF8; font-size: 15px; margin-bottom: 10px; color: var(--text-main);}
         input:focus, textarea:focus { border-color: var(--primary); outline: none; background: white; }
-        .btn-full { width: 100%; padding: 14px; border-radius: 18px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 8px;}
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(255, 126, 103, 0.2); }
+        .btn-full { width: 100%; padding: 14px; border-radius: 18px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px;}
+        .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: #FFB0B0; color: white; }
         .btn-secondary { background: #F0EBE8; color: #6D635E; }
+        .btn-cancel-item { font-size: 13px; color: #FF6B6B; background: #FFF0F0; border: 1px solid #FFDEDE; padding: 6px 12px; border-radius: 15px; cursor: pointer; float: right; margin-top: 10px; font-weight: 600;}
+
         .meal-section { background: white; border-radius: 16px; padding: 18px; margin-bottom: 12px; border: 2px solid #F5F0ED; transition: 0.2s; }
         .meal-section.active { border-color: var(--primary); background: #FFF5F2; }
         .meal-section.active-bf { border-color: var(--bf-color); background: #F2FDF5; }
-        .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 16px; }
         .detail-box { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.08); }
         .meal-section.active .detail-box, .meal-section.active-bf .detail-box { display: block; }
         .stepper { display: flex; gap: 15px; align-items: center; }
@@ -125,15 +116,24 @@
         .toggle-opt.selected { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .action-group { display: flex; gap: 15px; margin-top: 10px; }
         .action-group .btn-full { margin-top: 0; }
-        .btn-cancel-item { font-size: 13px; color: #FF6B6B; background: #FFF0F0; border: 1px solid #FFDEDE; padding: 6px 12px; border-radius: 15px; cursor: pointer; float: right; margin-top: 10px; font-weight: 600;}
-        .upload-area { width: 100%; height: 110px; border: 2px dashed #E0D8D5; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #B0A8A4; font-weight: 600; margin-bottom: 15px; background-color: #FAF8F6; background-size: contain; background-repeat: no-repeat; background-position: center;}
+        
+        /* 图片预览区 (链接版) */
+        .url-preview { 
+            width: 100%; height: 120px; 
+            border: 2px dashed #E0D8D5; border-radius: 16px; 
+            display: flex; align-items: center; justify-content: center; 
+            color: #B0A8A4; font-weight: 600; margin-bottom: 10px; 
+            background-color: #FAF8F6; background-size: cover; background-position: center;
+        }
+        .backup-textarea { width: 100%; height: 120px; font-family: monospace; font-size: 11px; color: #666; border: 1px solid #ccc; background: #f9f9f9; word-break: break-all;}
     </style>
 </head>
 <body>
 
 <div class="header">
+    <div class="header-btn-left" onclick="openBackupModal()">⚙️</div>
     <h1>🎀 大奇奇的美味指令 🎀</h1>
-    <div class="edit-trigger" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑菜单</div>
+    <div class="header-btn-right" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑菜单</div>
 </div>
 
 <div class="tabs">
@@ -149,7 +149,6 @@
         </div>
         <div class="chip-container" id="chips-bfPpl"></div>
     </div>
-
     <div id="container-bf"></div>
     <button class="btn-full btn-primary" id="add-cat-bf" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('bf')">+ 新增早餐种类</button>
 </div>
@@ -170,10 +169,8 @@
         <div class="chip-container" id="chips-dinnerRice"></div>
         <input type="text" id="input-dinner-extra" placeholder="备注 (如: 吃土豆/不吃米饭)" style="margin-top:12px;">
     </div>
-
     <div id="container-main"></div>
     <button class="btn-full btn-primary" id="add-cat-main" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('main')">+ 新增正餐种类</button>
-    
     <div class="cat-wrapper" style="margin-top:25px;">
         <div class="cat-title" style="font-size:16px; margin-bottom:10px;">💌 给阿姨的悄悄话</div>
         <textarea id="global-note" rows="3" placeholder="例如：记得收快递、打扫卫生呀..."></textarea>
@@ -182,6 +179,27 @@
 
 <div class="footer">
     <button class="btn-submit" onclick="generate()">✨ 生成大奇奇的指令 ✨</button>
+</div>
+
+<div id="backupModal" class="modal-overlay">
+    <div class="modal-sheet">
+        <div class="sheet-title" style="margin-bottom:10px;">⚙️ 设置 & 备份</div>
+        
+        <div style="background:#FFF0F0; padding:15px; border-radius:15px; margin-bottom:20px; text-align:center;">
+            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 如果无法添加新菜，点这里</p>
+            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空所有数据</button>
+        </div>
+
+        <p style="font-size:13px; color:#666; margin-bottom:10px;">
+            <b>备份代码</b> (复制发给大奇奇同步):
+        </p>
+        <textarea id="backup-area" class="backup-textarea"></textarea>
+        <div class="action-group">
+            <button class="btn-full btn-secondary" onclick="doExport()">📤 复制备份</button>
+            <button class="btn-full btn-primary" onclick="doImport()">📥 粘贴恢复</button>
+        </div>
+        <button class="btn-full" style="background:transparent; color:#999; margin-top:10px;" onclick="closeModal('backupModal')">关闭</button>
+    </div>
 </div>
 
 <div id="orderModal" class="modal-overlay">
@@ -243,10 +261,11 @@
         </div>
         <label style="font-weight:700; margin-bottom:5px; display:block;">菜品名称</label><input type="text" id="dm-name">
         <label style="font-weight:700; margin-bottom:5px; display:block;">默认备注</label><input type="text" id="dm-prep">
-        <label style="font-weight:700; margin-bottom:5px; display:block;">图片 (自动压缩)</label>
-        <label class="upload-area" id="dm-preview" for="file-input"><span>📷 点这里传图</span></label>
-        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
-        <input type="hidden" id="dm-img-data">
+        
+        <label style="font-weight:700; margin-bottom:5px; display:block;">图片链接 (粘贴URL)</label>
+        <div class="url-preview" id="dm-preview"><span>👀 这里会显示图片预览</span></div>
+        <input type="text" id="dm-img-url" placeholder="🔗 长按淘宝/百度图片复制链接，粘贴到这里" oninput="handleUrlInput(this)">
+        
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-full btn-danger" id="dm-btn-del" onclick="deleteDish()">删除</button>
             <button class="btn-full btn-primary" onclick="saveDishTemp()">保存好啦</button>
@@ -266,247 +285,188 @@
 </div>
 
 <script>
-    // 使用新KEY V22，确保数据结构是新的
+    // V25 数据Key
     const defaultData = {
         bf: { "🥪 每日主食": [{n:"绿豆粥"}, {n:"玉米"}], "🥚 优质蛋白": [{n:"水煮蛋"}], "🥛 每日饮品": [{n:"牛奶"}] },
         main: { "🍖 大口吃肉": [{n:"红烧肉"}], "🥬 清爽素菜": [{n:"炒青菜"}] },
-        options: { 
-            bfPpl: ["1人", "2人"],
-            lunchPpl: ["1人带饭", "2人带饭", "不带饭"], 
-            dinnerRice: ["1人米饭", "不用米饭", "1人土豆", "2人土豆"] 
-        },
+        options: { bfPpl: ["1人", "2人"], lunchPpl: ["1人带饭", "2人带饭", "不带饭"], dinnerRice: ["1人米饭", "不用米饭", "1人土豆", "2人土豆"] },
         labels: { bfPpl: "早餐几人吃", lunchPpl: "几个人带饭", dinnerRice: "晚餐几个人吃" }
     };
-    let data = {}; let orders = {}; 
-    let orderCtx=null; let editCtx=null;
-    let tmpB = ""; let tmpL = ""; let tmpD = ""; 
+    let data = {}; let orders = {}; let orderCtx=null; let editCtx=null; let tmpB=""; let tmpL=""; let tmpD="";
 
     function init() {
-        const saved = localStorage.getItem('aygj_v22'); 
-        if(saved) {
-            try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); }
-        } else {
-            data = JSON.parse(JSON.stringify(defaultData));
-        }
-        if(!data.bf) data.bf = {}; if(!data.main) data.main = {};
+        const saved = localStorage.getItem('aygj_v25'); 
+        if(saved) { try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); } } 
+        else { data = JSON.parse(JSON.stringify(defaultData)); }
+        if(!data.bf) data.bf={}; if(!data.main) data.main={};
         renderAll();
     }
 
-    // --- V22 核心修复：带反馈的保存 ---
-    function saveData() {
-        try {
-            localStorage.setItem('aygj_v22', JSON.stringify(data));
-            return true;
-        } catch(e) {
-            alert("❌ 图片太多存不下啦！\n请删掉几张图片，或者重新上传(系统会自动压缩)。");
-            return false;
+    // --- 核心逻辑 ---
+    function saveData() { 
+        try { localStorage.setItem('aygj_v25', JSON.stringify(data)); return true; } 
+        catch(e) { alert("❌ 存储出错！请去设置里清空数据后再试。"); return false; } 
+    }
+    
+    function clearAllData() {
+        if(confirm("⚠️ 确定要清空吗？\n这将删除你所有添加的菜品和图片链接！")) {
+            localStorage.removeItem('aygj_v25');
+            data = JSON.parse(JSON.stringify(defaultData));
+            saveData(); renderAll(); closeModal('backupModal');
+            alert("✅ 数据已清空，现在你可以尽情添加链接了！");
         }
     }
 
+    function openBackupModal() { document.getElementById('backup-area').value = JSON.stringify(data); document.getElementById('backupModal').classList.add('show'); }
+    function doExport() { document.getElementById('backup-area').select(); document.execCommand('copy'); alert("✅ 备份代码已复制！"); }
+    function doImport() {
+        const str = document.getElementById('backup-area').value;
+        if(!str) { alert("请先粘贴备份代码！"); return; }
+        try { const d = JSON.parse(str); if(confirm("⚠️ 确定要恢复吗？当前数据会被覆盖。")) { data = d; saveData(); renderAll(); closeModal('backupModal'); alert("🎉 恢复成功！"); } } catch(e) { alert("❌ 代码格式不对哦"); }
+    }
+
     function toggleEditMode() {
-        const body = document.body;
-        const btn = document.getElementById('mainActionBtn');
+        const body = document.body; const btn = document.getElementById('mainActionBtn');
         if (body.classList.contains('edit-mode')) {
-            if(saveData()) { // 只有保存成功才退出
-                alert("❤️ 菜单已经保存好啦！");
-                body.classList.remove('edit-mode');
-                btn.innerText = "✎ 编辑菜单";
-                btn.classList.remove('saving-mode');
-                document.getElementById('add-cat-bf').style.display = 'none';
-                document.getElementById('add-cat-main').style.display = 'none';
-                renderAll(); 
-            }
+            if(saveData()) { alert("❤️ 菜单保存好啦！"); body.classList.remove('edit-mode'); btn.innerText="✎ 编辑菜单"; btn.classList.remove('saving-mode'); document.getElementById('add-cat-bf').style.display='none'; document.getElementById('add-cat-main').style.display='none'; renderAll(); }
         } else {
-            body.classList.add('edit-mode');
-            btn.innerText = "💾 保存";
-            btn.classList.add('saving-mode');
-            document.getElementById('add-cat-bf').style.display = 'block';
-            document.getElementById('add-cat-main').style.display = 'block';
-            renderAll(); 
+            body.classList.add('edit-mode'); btn.innerText="💾 保存"; btn.classList.add('saving-mode'); document.getElementById('add-cat-bf').style.display='block'; document.getElementById('add-cat-main').style.display='block'; renderAll();
         }
     }
 
     function renderAll() { renderTab('bf', 'container-bf'); renderTab('main', 'container-main'); renderSettings(); }
-
     function renderTab(tab, containerId) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = "";
-        const isEdit = document.body.classList.contains('edit-mode');
-        const db = data[tab];
+        const container = document.getElementById(containerId); container.innerHTML = "";
+        const isEdit = document.body.classList.contains('edit-mode'); const db = data[tab];
         for (let cat in db) {
-            const wrapper = document.createElement('div');
-            wrapper.className = "cat-wrapper";
-            wrapper.dataset.cat = cat; 
-            const header = document.createElement('div');
-            header.className = "cat-header";
-            header.innerHTML = `
-                <div class="cat-title"><span>${cat}</span><span class="tools"><span class="icon-btn" onclick="renameCat('${tab}','${cat}')">✎</span><span class="icon-btn" style="color:#FF6B6B" onclick="delCat('${tab}','${cat}')">🗑</span></span></div>
-                <div style="display:flex; align-items:center; gap:10px;"><span class="tools icon-btn" style="color:var(--primary);font-weight:bold;" onclick="openDishModal('${tab}','${cat}',-1)">+ 加菜</span>${isEdit?'<span class="drag-handle">≡</span>':''}</div>
-            `;
-            const grid = document.createElement('div'); grid.className = "grid";
+            const wrapper = document.createElement('div'); wrapper.className="cat-wrapper"; wrapper.dataset.cat=cat;
+            const header = document.createElement('div'); header.className="cat-header";
+            header.innerHTML = `<div class="cat-title"><span>${cat}</span><span class="tools"><span class="icon-btn" onclick="renameCat('${tab}','${cat}')">✎</span><span class="icon-btn" style="color:#FF6B6B" onclick="delCat('${tab}','${cat}')">🗑</span></span></div><div style="display:flex;align-items:center;gap:10px;"><span class="tools icon-btn" style="color:var(--primary);font-weight:bold;" onclick="openDishModal('${tab}','${cat}',-1)">+ 加菜</span>${isEdit?'<span class="drag-handle">≡</span>':''}</div>`;
+            const grid = document.createElement('div'); grid.className="grid";
             db[cat].forEach((item, idx) => { grid.appendChild(createCard(item, tab, cat, idx)); });
             wrapper.appendChild(header); wrapper.appendChild(grid); container.appendChild(wrapper);
-            if (isEdit) new Sortable(grid, { animation: 200, delay: 200, delayOnTouchOnly: true, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag', onEnd: (evt) => { const i=data[tab][cat].splice(evt.oldIndex, 1)[0]; data[tab][cat].splice(evt.newIndex, 0, i); saveData(); }});
+            if(isEdit) new Sortable(grid, { animation:200, delay:200, delayOnTouchOnly:true, ghostClass:'sortable-ghost', dragClass:'sortable-drag', onEnd:(evt)=>{const i=data[tab][cat].splice(evt.oldIndex,1)[0]; data[tab][cat].splice(evt.newIndex,0,i); saveData();} });
         }
-        if (isEdit) new Sortable(container, { animation: 200, handle: '.drag-handle', onEnd: (evt) => { const n={}; container.querySelectorAll('.cat-wrapper').forEach(w => { n[w.dataset.cat] = data[tab][w.dataset.cat]; }); data[tab]=n; saveData(); }});
+        if(isEdit) new Sortable(container, { animation:200, handle:'.drag-handle', onEnd:(evt)=>{const n={}; container.querySelectorAll('.cat-wrapper').forEach(w=>{n[w.dataset.cat]=data[tab][w.dataset.cat]}); data[tab]=n; saveData();} });
     }
-
     function createCard(item, tab, cat, idx) {
-        const div = document.createElement('div');
-        const order = orders[item.n];
-        let cls = "card"; let badges = "";
+        const div = document.createElement('div'); const order = orders[item.n]; let cls = "card"; let badges = "";
         if(order) {
             if(order.bf?.active) { cls+=" sel-bf"; badges+=`<span class="badge bg-bf">早${order.bf.count>1?'x'+order.bf.count:''}</span>`; }
             if(order.lunch?.active) { cls+=" sel-lunch"; badges+=`<span class="badge bg-lunch">午${order.lunch.count>1?'x'+order.lunch.count:''}</span>`; }
             if(order.dinner?.active) { if(cls.includes("sel-lunch")) cls="card sel-both"; else cls+=" sel-dinner"; badges+=`<span class="badge ${order.dinner.mode==='prep'?'bg-prep':'bg-dinner'}">${order.dinner.mode==='prep'?'切':'晚'}${order.dinner.count>1?'x'+order.dinner.count:''}</span>`; }
         }
+        // 如果没有图片，使用默认占位图
         const imgUrl = item.img || `https://via.placeholder.com/150/FFF5E8/FF7E67?text=${item.n[0]}`;
         div.className = cls;
         div.innerHTML = `<img src="${imgUrl}" class="card-img"><div class="card-body"><div class="card-name">${item.n}</div><div>${badges}</div></div><div class="card-mask"><div class="mini-btn" onclick="event.stopPropagation();openDishModal('${tab}','${cat}',${idx})">✎ 修改</div></div>`;
         div.onclick = () => { if(!document.body.classList.contains('edit-mode')) openOrderModal(item, tab); };
         return div;
     }
+    function addCategory(tab) { const n=prompt("新分类名称："); if(n){if(!data[tab])data[tab]={}; if(data[tab][n]){alert("有了");return;} data[tab][n]=[]; saveData(); renderAll();} }
+    function renameCat(tab, old) { const n=prompt("新名字", old); if(n&&n!==old&&!data[tab][n]){const i=data[tab][old]; delete data[tab][old]; data[tab][n]=i; saveData(); renderAll();} }
+    function delCat(tab, cat) { if(confirm(`删除【${cat}】？`)){delete data[tab][cat]; saveData(); renderAll();} }
 
-    function addCategory(tab) { const n = prompt("新分类名称："); if(n){if(!data[tab])data[tab]={}; if(data[tab][n]){alert("有了");return;} data[tab][n]=[]; saveData(); renderAll();} }
-    function renameCat(tab, old) { const n=prompt("新名字", old); if(n&&n!==old&&!data[tab][n]){const i=data[tab][old];delete data[tab][old];data[tab][n]=i;saveData();renderAll();} }
-    function delCat(tab, cat) { if(confirm(`删除【${cat}】？`)){delete data[tab][cat];saveData();renderAll();} }
-
+    // --- V25 编辑逻辑 (只保留链接) ---
     function openDishModal(tab, cat, idx) {
-        editCtx = { tab, cat, idx, isNew: idx===-1 };
-        const item = idx===-1 ? {n:"", prep:""} : data[tab][cat][idx];
-        document.getElementById('dm-title').innerText = editCtx.isNew ? "✨ 添加美食" : "✨ 修改美食";
-        document.getElementById('dm-name').value = item.n;
-        document.getElementById('dm-prep').value = item.prep || "";
-        document.getElementById('dm-preview').style.backgroundImage = item.img ? `url(${item.img})` : "none";
-        document.getElementById('dm-img-data').value = item.img || "";
-        document.getElementById('dm-btn-del').style.display = editCtx.isNew ? 'none' : 'block';
-        document.getElementById('dishModal').classList.add('show');
+        editCtx = { tab, cat, idx, isNew: idx===-1 }; const item = idx===-1 ? {n:"", prep:""} : data[tab][cat][idx];
+        document.getElementById('dm-title').innerText = editCtx.isNew?"✨ 添加":"✨ 修改"; document.getElementById('dm-name').value = item.n; document.getElementById('dm-prep').value = item.prep||"";
+        
+        // 处理链接显示
+        const url = item.img || "";
+        document.getElementById('dm-img-url').value = url;
+        document.getElementById('dm-preview').style.backgroundImage = url ? `url(${url})` : "none";
+        document.getElementById('dm-preview').innerHTML = url ? "" : "<span>👀 预览区域</span>";
+        
+        document.getElementById('dm-btn-del').style.display = editCtx.isNew?'none':'block'; document.getElementById('dishModal').classList.add('show');
     }
-    // --- V22 极限压缩逻辑 ---
-    function handleFile(input) {
-        if(input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image(); img.src = e.target.result;
-                img.onload = () => {
-                    const cvs = document.createElement('canvas');
-                    // 压缩到 180px，极小
-                    const scale = 180/img.width;
-                    cvs.width=180; cvs.height=img.height*scale;
-                    cvs.getContext('2d').drawImage(img,0,0,cvs.width,cvs.height);
-                    // 质量 0.5
-                    const zip = cvs.toDataURL('image/jpeg', 0.5);
-                    document.getElementById('dm-preview').style.backgroundImage = `url(${zip})`;
-                    document.getElementById('dm-img-data').value = zip;
-                }
-            };
-            reader.readAsDataURL(input.files[0]);
+    
+    function handleUrlInput(input) {
+        const url = input.value.trim();
+        const prev = document.getElementById('dm-preview');
+        if(url) {
+            prev.style.backgroundImage = `url(${url})`;
+            prev.innerHTML = "";
+        } else {
+            prev.style.backgroundImage = "none";
+            prev.innerHTML = "<span>👀 预览区域</span>";
         }
     }
+    
     function saveDishTemp() {
         const n = document.getElementById('dm-name').value; if(!n) return;
-        const item = { n, img: document.getElementById('dm-img-data').value, prep: document.getElementById('dm-prep').value };
+        const url = document.getElementById('dm-img-url').value.trim();
+        
+        const item = { n, img: url, prep: document.getElementById('dm-prep').value };
         if(editCtx.isNew) data[editCtx.tab][editCtx.cat].push(item); else data[editCtx.tab][editCtx.cat][editCtx.idx] = item;
-        // 立即保存一次，防止丢失
-        saveData();
-        closeModal('dishModal'); renderAll();
+        saveData(); closeModal('dishModal'); renderAll();
     }
     function deleteDish() { if(confirm("删除？")){data[editCtx.tab][editCtx.cat].splice(editCtx.idx, 1); delete orders[document.getElementById('dm-name').value]; saveData(); closeModal('dishModal'); renderAll();} }
 
     function openOrderModal(item, tab) {
-        orderCtx = { item, tab };
-        const order = orders[item.n] || {};
-        document.getElementById('om-title').innerText = item.n;
-        document.getElementById('panel-bf').style.display = tab==='bf'?'block':'none';
-        document.getElementById('panel-main').style.display = tab==='main'?'block':'none';
-        document.getElementById('note-bf').value = ""; document.getElementById('note-lunch').value = ""; document.getElementById('note-dinner').value = "";
-        if(tab === 'bf') {
-            updateUI('bf', order.bf);
-            if (!order.bf || !order.bf.active) { toggleMeal('bf'); }
-        } else {
-            updateUI('lunch', order.lunch); updateUI('dinner', order.dinner);
-            const mode = order.dinner?.mode || 'cook'; setDinnerMode(mode, false);
-            if (order.dinner?.note) document.getElementById('note-dinner').value = order.dinner.note;
-            else if (mode === 'prep' && item.prep) document.getElementById('note-dinner').value = item.prep;
-        }
+        orderCtx={item,tab}; const order=orders[item.n]||{}; document.getElementById('om-title').innerText=item.n;
+        document.getElementById('panel-bf').style.display=tab==='bf'?'block':'none'; document.getElementById('panel-main').style.display=tab==='main'?'block':'none';
+        document.getElementById('note-bf').value=""; document.getElementById('note-lunch').value=""; document.getElementById('note-dinner').value="";
+        if(tab==='bf'){ updateUI('bf', order.bf); if(!order.bf||!order.bf.active) toggleMeal('bf'); }
+        else { updateUI('lunch', order.lunch); updateUI('dinner', order.dinner); const m=order.dinner?.mode||'cook'; setDinnerMode(m,false);
+        if(order.dinner?.note) document.getElementById('note-dinner').value=order.dinner.note; else if(m==='prep'&&item.prep) document.getElementById('note-dinner').value=item.prep; }
         document.getElementById('orderModal').classList.add('show');
     }
-
     function toggleMeal(t) {
-        const sec = document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner'));
-        const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner'));
-        const cls = t==='bf'?'active-bf':'active';
-        sec.classList.toggle(cls);
-        if(sec.classList.contains(cls)) { chk.innerHTML = "❤️"; const qtyId = t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner'); if(document.getElementById(qtyId).innerText === "0") document.getElementById(qtyId).innerText = "1"; } 
-        else { chk.innerHTML = ""; }
+        const sec = document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner')); const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner')); const cls = t==='bf'?'active-bf':'active';
+        sec.classList.toggle(cls); if(sec.classList.contains(cls)){ chk.innerHTML="❤️"; const id=t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner'); if(document.getElementById(id).innerText==="0")document.getElementById(id).innerText="1"; } else { chk.innerHTML=""; }
     }
-    function updateUI(t, d) {
-        const sec = document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner'));
-        const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner'));
-        const qty = document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner'));
-        const note = document.getElementById(t==='bf'?'note-bf':(t==='lunch'?'note-lunch':'note-dinner'));
-        const cls = t==='bf'?'active-bf':'active';
-        if(d && d.active) { sec.classList.add(cls); chk.innerHTML = "❤️"; qty.innerText = d.count; if(t!=='dinner') note.value = d.note || ""; } 
-        else { sec.classList.remove(cls); chk.innerHTML = ""; qty.innerText = "1"; }
+    function updateUI(t,d) {
+        const sec=document.getElementById(t==='bf'?'sec-bf':(t==='lunch'?'sec-lunch':'sec-dinner')); const chk=document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner')); const qty=document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')); const note=document.getElementById(t==='bf'?'note-bf':(t==='lunch'?'note-lunch':'note-dinner')); const cls=t==='bf'?'active-bf':'active';
+        if(d&&d.active){sec.classList.add(cls);chk.innerHTML="❤️";qty.innerText=d.count;if(t!=='dinner')note.value=d.note||"";}else{sec.classList.remove(cls);chk.innerHTML="";qty.innerText="1";}
     }
     function confirmOrder() {
-        const item = orderCtx.item; if(!orders[item.n]) orders[item.n] = {};
-        if(orderCtx.tab === 'bf') {
-            if(document.getElementById('sec-bf').classList.contains('active-bf')) orders[item.n].bf = { active:true, count:getQty('bf'), note:getVal('note-bf') }; else delete orders[item.n].bf;
-        } else {
-            if(document.getElementById('sec-lunch').classList.contains('active')) orders[item.n].lunch = { active:true, count:getQty('lunch'), note:getVal('note-lunch') }; else delete orders[item.n].lunch;
-            if(document.getElementById('sec-dinner').classList.contains('active')) {
-                const mode = document.getElementById('sec-dinner').dataset.mode||'cook'; const note = getVal('note-dinner');
-                orders[item.n].dinner = { active:true, count:getQty('dinner'), mode:mode, note:note };
-                if (mode === 'prep' && note) { item.prep = note; saveData(); }
-            } else delete orders[item.n].dinner;
-        }
-        closeModal('orderModal'); renderAll();
+        const item=orderCtx.item; if(!orders[item.n])orders[item.n]={};
+        if(orderCtx.tab==='bf'){ if(document.getElementById('sec-bf').classList.contains('active-bf')) orders[item.n].bf={active:true,count:getQty('bf'),note:getVal('note-bf')}; else delete orders[item.n].bf; }
+        else {
+            if(document.getElementById('sec-lunch').classList.contains('active')) orders[item.n].lunch={active:true,count:getQty('lunch'),note:getVal('note-lunch')}; else delete orders[item.n].lunch;
+            if(document.getElementById('sec-dinner').classList.contains('active')) { const m=document.getElementById('sec-dinner').dataset.mode||'cook'; const n=getVal('note-dinner'); orders[item.n].dinner={active:true,count:getQty('dinner'),mode:m,note:n}; if(m==='prep'&&n){item.prep=n;saveData();} } else delete orders[item.n].dinner;
+        } closeModal('orderModal'); renderAll();
     }
-    function getQty(t) { return parseInt(document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')).innerText); }
-    function getVal(id) { return document.getElementById(id).value; }
-    function adjQty(t, d) { const el = document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')); let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v; }
-    function setDinnerMode(m, ui=true) {
-        document.getElementById('sec-dinner').dataset.mode = m;
-        document.getElementById('opt-cook').className = m==='cook'?'toggle-opt selected':'toggle-opt';
-        document.getElementById('opt-prep').className = m==='prep'?'toggle-opt selected':'toggle-opt';
-        if(ui) { document.getElementById('note-dinner').value = m==='prep'?(orderCtx.item.prep||""):""; }
-    }
-    function renderSettings() { renderChips('chips-bfPpl', data.options.bfPpl, 'bfPpl'); renderChips('chips-lunchPpl', data.options.lunchPpl, 'lunchPpl'); renderChips('chips-dinnerRice', data.options.dinnerRice, 'dinnerRice'); }
-    function renderChips(id, list, key) {
-        const el = document.getElementById(id); el.innerHTML="";
-        list.forEach((txt, i)=>{
-            const isSel = (key==='bfPpl'&&tmpB===txt) || (key==='lunchPpl'&&tmpL===txt) || (key==='dinnerRice'&&tmpD===txt);
-            let cls = ''; if(isSel) { if(key==='bfPpl') cls='bf-active'; if(key==='lunchPpl') cls='lunch-active'; if(key==='dinnerRice') cls='dinner-active'; }
-            const d = document.createElement('div'); d.className = `chip ${cls}`; d.innerHTML = `${txt}<div class="chip-del" onclick="event.stopPropagation();delOpt('${key}',${i})">×</div>`;
-            d.onclick = () => { if(!document.body.classList.contains('edit-mode')) { if(key==='bfPpl') tmpB=(tmpB===txt?"":txt); else if(key==='lunchPpl') tmpL=(tmpL===txt?"":txt); else tmpD=(tmpD===txt?"":txt); renderSettings(); } };
+    function getQty(t){return parseInt(document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')).innerText);}
+    function getVal(id){return document.getElementById(id).value;}
+    function adjQty(t,d){const el=document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')); let v=parseInt(el.innerText)+d; if(v<1)v=1; el.innerText=v;}
+    function setDinnerMode(m,ui=true){ document.getElementById('sec-dinner').dataset.mode=m; document.getElementById('opt-cook').className=m==='cook'?'toggle-opt selected':'toggle-opt'; document.getElementById('opt-prep').className=m==='prep'?'toggle-opt selected':'toggle-opt'; if(ui)document.getElementById('note-dinner').value=m==='prep'?(orderCtx.item.prep||""):""; }
+    function renderSettings(){ renderChips('chips-bfPpl', data.options.bfPpl, 'bfPpl'); renderChips('chips-lunchPpl', data.options.lunchPpl, 'lunchPpl'); renderChips('chips-dinnerRice', data.options.dinnerRice, 'dinnerRice'); }
+    function renderChips(id,list,key){
+        const el=document.getElementById(id); el.innerHTML="";
+        list.forEach((txt,i)=>{
+            const isSel=(key==='bfPpl'&&tmpB===txt)||(key==='lunchPpl'&&tmpL===txt)||(key==='dinnerRice'&&tmpD===txt);
+            let cls=''; if(isSel){if(key==='bfPpl')cls='bf-active';if(key==='lunchPpl')cls='lunch-active';if(key==='dinnerRice')cls='dinner-active';}
+            const d=document.createElement('div'); d.className=`chip ${cls}`; d.innerHTML=`${txt}<div class="chip-del" onclick="event.stopPropagation();delOpt('${key}',${i})">×</div>`;
+            d.onclick=()=>{if(!document.body.classList.contains('edit-mode')){if(key==='bfPpl')tmpB=(tmpB===txt?"":txt);else if(key==='lunchPpl')tmpL=(tmpL===txt?"":txt);else tmpD=(tmpD===txt?"":txt);renderSettings();}};
             el.appendChild(d);
         });
-        const add = document.createElement('div'); add.className="chip"; add.style.border="1px dashed #FFD1C7"; add.style.background="white"; add.style.color="var(--primary)"; add.innerHTML="+";
-        add.onclick=()=>{ if(document.body.classList.contains('edit-mode')) {const v=prompt("添加"); if(v){data.options[key].push(v); saveData(); renderSettings();}} };
+        const add=document.createElement('div'); add.className="chip"; add.style.border="1px dashed #FFD1C7"; add.style.background="white"; add.style.color="var(--primary)"; add.innerHTML="+";
+        add.onclick=()=>{if(document.body.classList.contains('edit-mode')){const v=prompt("添加");if(v){data.options[key].push(v);saveData();renderSettings();}}};
         el.appendChild(add);
     }
-    function delOpt(k,i) { data.options[k].splice(i,1); saveData(); renderSettings(); }
-    function editLabel(k) { const v=prompt("新标题", data.labels[k]); if(v){data.labels[k]=v; saveData(); renderSettings();} }
-    
-    function generate() {
-        const btn = document.getElementById('btn-copy'); btn.innerText = "📄 复制给阿姨"; btn.style.backgroundColor = "var(--primary)";
-        let msg = "阿姨，明天饭菜安排：\n"; let bf=[], lu=[], di=[];
-        for(let k in orders) {
+    function delOpt(k,i){data.options[k].splice(i,1);saveData();renderSettings();}
+    function editLabel(k){const v=prompt("新标题",data.labels[k]);if(v){data.labels[k]=v;saveData();renderSettings();}}
+    function generate(){
+        const btn=document.getElementById('btn-copy'); btn.innerText="📄 复制给阿姨"; btn.style.backgroundColor="var(--primary)";
+        let msg="阿姨，明天饭菜安排：\n"; let bf=[],lu=[],di=[];
+        for(let k in orders){
             if(orders[k].bf?.active) bf.push(`${k}${orders[k].bf.count>1?' x'+orders[k].bf.count:''} ${orders[k].bf.note?('('+orders[k].bf.note+')'):''}`);
             if(orders[k].lunch?.active) lu.push(`${k}${orders[k].lunch.count>1?' x'+orders[k].lunch.count:''} ${orders[k].lunch.note?('('+orders[k].lunch.note+')'):''}`);
-            if(orders[k].dinner?.active) { const d=orders[k].dinner; di.push(`${d.mode==='prep'?'🔪 ':'🍳 '}${k}${d.count>1?' x'+d.count:''} ${d.note?('('+d.note+')'):''}`); }
+            if(orders[k].dinner?.active) {const d=orders[k].dinner; di.push(`${d.mode==='prep'?'🔪 ':'🍳 '}${k}${d.count>1?' x'+d.count:''} ${d.note?('('+d.note+')'):''}`);}
         }
         if(bf.length||tmpB) msg+=`\n☀️【早餐】${tmpB?(' '+tmpB):''}\n${bf.join('，')}`;
         if(lu.length||tmpL) msg+=`\n\n🍱【中餐】${tmpL?(' '+tmpL):''}\n${lu.join('，')}${document.getElementById('input-lunch-extra').value?('\n补充: '+document.getElementById('input-lunch-extra').value):''}`;
         if(di.length||tmpD) msg+=`\n\n🌙【晚餐】${tmpD?(' '+tmpD):''}\n${di.join('\n')}${document.getElementById('input-dinner-extra').value?('\n补充: '+document.getElementById('input-dinner-extra').value):''}`;
-        const gn = document.getElementById('global-note').value; if(gn) msg+=`\n\n📝【备注】\n${gn}`;
+        const gn=document.getElementById('global-note').value; if(gn) msg+=`\n\n📝【备注】\n${gn}`;
         msg+="\n\n辛苦阿姨了！";
         document.getElementById('final-text').value=msg; document.getElementById('resultModal').classList.add('show');
     }
-    function copyText(){ document.getElementById('final-text').select(); document.execCommand('copy'); const btn = document.getElementById('btn-copy'); btn.innerText = "✅ 复制成功啦"; btn.style.backgroundColor = "#6BCB77"; }
-    function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-    function switchTab(t){ document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.section').forEach(e=>e.classList.remove('active')); document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active'); document.getElementById('tab-'+t).classList.add('active'); }
+    function copyText(){document.getElementById('final-text').select();document.execCommand('copy');const btn=document.getElementById('btn-copy');btn.innerText="✅ 复制成功啦";btn.style.backgroundColor="#6BCB77";}
+    function closeModal(id){document.getElementById(id).classList.remove('show');}
+    function switchTab(t){document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');document.getElementById('tab-'+t).classList.add('active');}
+    
     init();
 </script>
 </body>
