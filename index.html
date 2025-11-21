@@ -6,24 +6,38 @@
     <title>大奇奇的美味指令</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        /* --- V25 无限链接版 (样式保持温馨风格) --- */
+        /* --- V27 纯净文字版配色 --- */
         :root {
-            --primary: #FF7E67; --bg: #FFF9F2; --card-bg: #FFFFFF;
-            --text-main: #5D5550; --text-sub: #9E948D;
-            --lunch-color: #FFB03B; --dinner-color: #8B80F9; --bf-color: #6BCB77;
-            --radius: 20px; --shadow: 0 4px 20px rgba(255, 126, 103, 0.08);
+            --primary: #FF7E67; /* 珊瑚粉 */
+            --bg: #FFFBF5;      /* 更暖的米黄背景 */
+            --card-bg: #FFFFFF;
+            --text-main: #6D635E; 
+            --text-sub: #AFA6A0;
+            
+            --lunch-color: #FFB03B; 
+            --dinner-color: #9D8FFF; 
+            --bf-color: #7ED38C;     
+            
+            --radius: 16px;
+            --shadow: 0 2px 10px rgba(109, 99, 94, 0.05);
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-            background-color: var(--bg); color: var(--text-main); margin: 0;
-            padding-bottom: 120px; -webkit-tap-highlight-color: transparent; 
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0;
+            padding-bottom: 120px; 
+            -webkit-tap-highlight-color: transparent; 
             user-select: none; -webkit-user-select: none;
         }
+
+        /* 顶部 */
         .header {
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px);
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             padding: 15px 20px; position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: center; align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.02); box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+            border-bottom: 1px dashed rgba(0,0,0,0.05);
         }
         .header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
         .header-btn-left { position: absolute; left: 20px; font-size: 20px; cursor: pointer; padding: 5px; }
@@ -33,51 +47,93 @@
         }
         .header-btn-right.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 126, 103, 0.3); }
 
-        .tabs { display: flex; background: rgba(255,255,255,0.6); padding: 6px; margin: 15px 20px; border-radius: 25px; }
-        .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 15px; font-weight: 700; color: var(--text-sub); border-radius: 20px; transition: 0.3s;}
-        .tab.active { background: #FFFFFF; color: var(--primary); box-shadow: 0 2px 10px rgba(0,0,0,0.05);}
+        /* 标签页 */
+        .tabs { display: flex; background: #F5F0EB; padding: 5px; margin: 15px 20px; border-radius: 30px; }
+        .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 15px; font-weight: 700; color: var(--text-sub); border-radius: 25px; transition: 0.2s;}
+        .tab.active { background: #FFFFFF; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
 
         .section { display: none; padding: 0 20px; }
         .section.active { display: block; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 15px; min-height: 10px; }
+
+        /* --- 核心布局修改：文字版网格 --- */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* 稍微宽一点 */
+            gap: 12px; min-height: 10px; 
+        }
         
-        .cat-wrapper { margin-bottom: 20px; background: transparent; border-radius: var(--radius); transition: 0.2s; }
-        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.6); padding: 10px; border: 2px dashed #FFD1C7; }
-        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 5px;}
-        .cat-title { font-size: 18px; font-weight: 800; color: #6D635E; display: flex; align-items: center; gap: 8px; }
-        .cat-title::before { content:''; width:6px; height:6px; background:var(--primary); border-radius:50%; }
+        .cat-wrapper { margin-bottom: 25px; }
+        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 10px; border: 2px dashed #FFD1C7; border-radius: 15px;}
+
+        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin-bottom: 8px;}
+        .cat-title { font-size: 17px; font-weight: 800; color: #5D5550; display: flex; align-items: center; gap: 8px; }
+        /* 装饰点 */
+        .cat-title::before { content:''; width:8px; height:8px; background:var(--primary); border-radius:50%; opacity: 0.6;}
+        
         .tools { display: none; align-items: center; gap: 12px; }
         body.edit-mode .tools { display: flex; }
         .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
         .drag-handle { font-size: 20px; color: #D1C7C0; cursor: grab; padding: 0 10px; touch-action: none; }
 
+        /* --- V27 贴纸卡片样式 --- */
         .card {
-            background: var(--card-bg); border-radius: var(--radius); overflow: hidden;
-            position: relative; box-shadow: var(--shadow);
-            display: flex; flex-direction: column; -webkit-touch-callout: none; transition: all 0.2s; border: 2px solid transparent;
+            background: #FFFFFF; 
+            border-radius: 16px; 
+            position: relative; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* 很淡的投影 */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            min-height: 65px; /* 保证高度，方便点击 */
+            padding: 10px;
+            border: 2px solid transparent;
+            transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
+            -webkit-touch-callout: none;
         }
-        .card:active { transform: scale(0.96); }
-        .card.sel-bf { border-color: var(--bf-color); background: #F2FDF5; }
-        .card.sel-lunch { border-color: var(--lunch-color); background: #FFF9F0; }
-        .card.sel-dinner { border-color: var(--dinner-color); background: #F7F6FF; }
-        .card.sel-both { border-color: var(--primary); background: #FFF0EB; }
-        .card-img { width: 100%; height: 90px; object-fit: cover; background: #FFF5E8; pointer-events: none; }
-        .card-body { padding: 12px 8px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
-        .card-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #5D5550; }
-        .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; color: white; display: inline-block; margin: 2px; font-weight: 600;}
-        .bg-bf { background: var(--bf-color); } .bg-lunch { background: var(--lunch-color); } .bg-dinner { background: var(--dinner-color); } .bg-prep { background: #B8B2A9; }
-        
-        .card-mask {
-            position: absolute; top:0; left:0; width:100%; height:90px;
-            background: rgba(255,255,255,0.6); z-index: 10; display: none;
-            align-items: center; justify-content: center; backdrop-filter: blur(1px);
-        }
-        body.edit-mode .card-mask { display: flex; }
-        .mini-btn { font-size: 12px; padding: 4px 10px; border-radius: 15px; background: white; color: var(--primary); border: 1px solid var(--primary); font-weight: bold; }
+        .card:active { transform: scale(0.95); }
 
+        /* 菜名 */
+        .card-name { 
+            font-size: 15px; font-weight: 700; 
+            color: #5D5550; margin: 0; line-height: 1.3;
+            word-break: break-all;
+        }
+
+        /* 选中状态：变成实心糖果色 */
+        .card.sel-bf { background: var(--bf-color); color: white; border-color: var(--bf-color); box-shadow: 0 4px 12px rgba(126, 211, 140, 0.4); }
+        .card.sel-lunch { background: var(--lunch-color); color: white; border-color: var(--lunch-color); box-shadow: 0 4px 12px rgba(255, 176, 59, 0.4); }
+        .card.sel-dinner { background: var(--dinner-color); color: white; border-color: var(--dinner-color); box-shadow: 0 4px 12px rgba(157, 143, 255, 0.4); }
+        .card.sel-both { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255, 126, 103, 0.4); }
+
+        /* 选中后的文字颜色强制变白 */
+        .card.sel-bf .card-name, .card.sel-lunch .card-name, .card.sel-dinner .card-name, .card.sel-both .card-name {
+            color: white;
+        }
+
+        /* 小徽章 (x2, 切配) */
+        .badge { 
+            font-size: 11px; background: rgba(255,255,255,0.2); 
+            padding: 2px 6px; border-radius: 8px; 
+            color: white; display: inline-block; margin-top: 4px; font-weight: 600;
+        }
+
+        /* 编辑模式下的抖动和按钮 */
+        .card-edit-btn {
+            position: absolute; top: -5px; right: -5px;
+            width: 24px; height: 24px; background: #FF6B6B; color: white;
+            border-radius: 50%; font-size: 12px; display: none;
+            align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10;
+        }
+        body.edit-mode .card-edit-btn { display: flex; }
+        body.edit-mode .card { border: 1px solid #E0D8D5; background: #FCFAF9; box-shadow: none; }
+
+        /* 设置面板 */
         .settings-panel { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
         .chip-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;}
-        .chip { padding: 8px 15px; background: #F7F4F2; border-radius: 20px; font-size: 13px; position: relative; color: #6D635E; font-weight: 600;}
+        .chip { 
+            padding: 8px 15px; background: #F7F4F2; border-radius: 20px; font-size: 13px; position: relative; 
+            color: #6D635E; font-weight: 600; transition: 0.2s;
+        }
         .chip.bf-active { background: var(--bf-color); color: white; }
         .chip.lunch-active { background: var(--lunch-color); color: white; }
         .chip.dinner-active { background: var(--dinner-color); color: white; }
@@ -86,17 +142,18 @@
 
         .footer {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
             padding: 15px 25px; z-index: 200; padding-bottom: max(15px, env(safe-area-inset-bottom));
             box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
         }
         .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 30px; font-weight: 700; font-size: 17px; box-shadow: 0 8px 20px rgba(255, 126, 103, 0.3); }
 
+        /* 弹窗通用 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(93, 85, 80, 0.4); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
         .modal-overlay.show { display: flex; }
         .modal-sheet { background: #FFFFFF; width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; padding: 25px; padding-bottom: max(30px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; }
         
-        input, textarea { width: 100%; padding: 12px; border: 2px solid #F2EEEA; border-radius: 12px; box-sizing: border-box; background: #FCFAF8; font-size: 15px; margin-bottom: 10px; color: var(--text-main);}
+        input, textarea { width: 100%; padding: 14px; border: 2px solid #F2EEEA; border-radius: 12px; box-sizing: border-box; background: #FCFAF8; font-size: 16px; margin-bottom: 12px; color: var(--text-main);}
         input:focus, textarea:focus { border-color: var(--primary); outline: none; background: white; }
         .btn-full { width: 100%; padding: 14px; border-radius: 18px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px;}
         .btn-primary { background: var(--primary); color: white; }
@@ -107,6 +164,7 @@
         .meal-section { background: white; border-radius: 16px; padding: 18px; margin-bottom: 12px; border: 2px solid #F5F0ED; transition: 0.2s; }
         .meal-section.active { border-color: var(--primary); background: #FFF5F2; }
         .meal-section.active-bf { border-color: var(--bf-color); background: #F2FDF5; }
+        .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 16px; }
         .detail-box { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.08); }
         .meal-section.active .detail-box, .meal-section.active-bf .detail-box { display: block; }
         .stepper { display: flex; gap: 15px; align-items: center; }
@@ -116,15 +174,6 @@
         .toggle-opt.selected { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .action-group { display: flex; gap: 15px; margin-top: 10px; }
         .action-group .btn-full { margin-top: 0; }
-        
-        /* 图片预览区 (链接版) */
-        .url-preview { 
-            width: 100%; height: 120px; 
-            border: 2px dashed #E0D8D5; border-radius: 16px; 
-            display: flex; align-items: center; justify-content: center; 
-            color: #B0A8A4; font-weight: 600; margin-bottom: 10px; 
-            background-color: #FAF8F6; background-size: cover; background-position: center;
-        }
         .backup-textarea { width: 100%; height: 120px; font-family: monospace; font-size: 11px; color: #666; border: 1px solid #ccc; background: #f9f9f9; word-break: break-all;}
     </style>
 </head>
@@ -150,7 +199,7 @@
         <div class="chip-container" id="chips-bfPpl"></div>
     </div>
     <div id="container-bf"></div>
-    <button class="btn-full btn-primary" id="add-cat-bf" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('bf')">+ 新增早餐种类</button>
+    <button class="btn-full btn-primary" id="add-cat-bf" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('bf')">+ 新增早餐分类</button>
 </div>
 
 <div id="tab-main" class="section">
@@ -170,7 +219,7 @@
         <input type="text" id="input-dinner-extra" placeholder="备注 (如: 吃土豆/不吃米饭)" style="margin-top:12px;">
     </div>
     <div id="container-main"></div>
-    <button class="btn-full btn-primary" id="add-cat-main" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('main')">+ 新增正餐种类</button>
+    <button class="btn-full btn-primary" id="add-cat-main" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('main')">+ 新增正餐分类</button>
     <div class="cat-wrapper" style="margin-top:25px;">
         <div class="cat-title" style="font-size:16px; margin-bottom:10px;">💌 给阿姨的悄悄话</div>
         <textarea id="global-note" rows="3" placeholder="例如：记得收快递、打扫卫生呀..."></textarea>
@@ -184,15 +233,11 @@
 <div id="backupModal" class="modal-overlay">
     <div class="modal-sheet">
         <div class="sheet-title" style="margin-bottom:10px;">⚙️ 设置 & 备份</div>
-        
         <div style="background:#FFF0F0; padding:15px; border-radius:15px; margin-bottom:20px; text-align:center;">
-            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 如果无法添加新菜，点这里</p>
-            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空所有数据</button>
+            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 建议先清空旧数据</p>
+            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空 (清除旧图片)</button>
         </div>
-
-        <p style="font-size:13px; color:#666; margin-bottom:10px;">
-            <b>备份代码</b> (复制发给大奇奇同步):
-        </p>
+        <p style="font-size:13px; color:#666; margin-bottom:10px;"><b>备份代码</b> (复制发给大奇奇同步):</p>
         <textarea id="backup-area" class="backup-textarea"></textarea>
         <div class="action-group">
             <button class="btn-full btn-secondary" onclick="doExport()">📤 复制备份</button>
@@ -259,12 +304,8 @@
             <span class="sheet-title" id="dm-title"></span>
             <span style="font-size:28px;color:#E0D8D5; line-height:20px;" onclick="closeModal('dishModal')">×</span>
         </div>
-        <label style="font-weight:700; margin-bottom:5px; display:block;">菜品名称</label><input type="text" id="dm-name">
-        <label style="font-weight:700; margin-bottom:5px; display:block;">默认备注</label><input type="text" id="dm-prep">
-        
-        <label style="font-weight:700; margin-bottom:5px; display:block;">图片链接 (粘贴URL)</label>
-        <div class="url-preview" id="dm-preview"><span>👀 这里会显示图片预览</span></div>
-        <input type="text" id="dm-img-url" placeholder="🔗 长按淘宝/百度图片复制链接，粘贴到这里" oninput="handleUrlInput(this)">
+        <label style="font-weight:700; margin-bottom:5px; display:block;">菜品名称</label><input type="text" id="dm-name" placeholder="如: 番茄炒蛋">
+        <label style="font-weight:700; margin-bottom:5px; display:block;">默认备注 (记忆习惯)</label><input type="text" id="dm-prep" placeholder="如: 切小块">
         
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-full btn-danger" id="dm-btn-del" onclick="deleteDish()">删除</button>
@@ -285,35 +326,34 @@
 </div>
 
 <script>
-    // V25 数据Key
+    // 初始数据 (纯文字版)
     const defaultData = {
-        bf: { "🥪 每日主食": [{n:"绿豆粥"}, {n:"玉米"}], "🥚 优质蛋白": [{n:"水煮蛋"}], "🥛 每日饮品": [{n:"牛奶"}] },
-        main: { "🍖 大口吃肉": [{n:"红烧肉"}], "🥬 清爽素菜": [{n:"炒青菜"}] },
+        bf: { "🥪 每日主食": [{n:"绿豆粥"}, {n:"玉米"}, {n:"烧麦"}], "🥚 优质蛋白": [{n:"水煮蛋"}, {n:"荷包蛋"}], "🥛 每日饮品": [{n:"牛奶"}, {n:"豆浆"}] },
+        main: { "🍖 大口吃肉": [{n:"红烧肉"}, {n:"粉蒸肉"}], "🥬 清爽素菜": [{n:"炒青菜"}, {n:"酸辣土豆丝"}] },
         options: { bfPpl: ["1人", "2人"], lunchPpl: ["1人带饭", "2人带饭", "不带饭"], dinnerRice: ["1人米饭", "不用米饭", "1人土豆", "2人土豆"] },
         labels: { bfPpl: "早餐几人吃", lunchPpl: "几个人带饭", dinnerRice: "晚餐几个人吃" }
     };
     let data = {}; let orders = {}; let orderCtx=null; let editCtx=null; let tmpB=""; let tmpL=""; let tmpD="";
 
     function init() {
-        const saved = localStorage.getItem('aygj_v25'); 
+        const saved = localStorage.getItem('aygj_v27'); // V27 新Key
         if(saved) { try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); } } 
         else { data = JSON.parse(JSON.stringify(defaultData)); }
         if(!data.bf) data.bf={}; if(!data.main) data.main={};
         renderAll();
     }
 
-    // --- 核心逻辑 ---
     function saveData() { 
-        try { localStorage.setItem('aygj_v25', JSON.stringify(data)); return true; } 
-        catch(e) { alert("❌ 存储出错！请去设置里清空数据后再试。"); return false; } 
+        try { localStorage.setItem('aygj_v27', JSON.stringify(data)); return true; } 
+        catch(e) { alert("❌ 存储出错！请去设置里清空数据。"); return false; } 
     }
     
     function clearAllData() {
-        if(confirm("⚠️ 确定要清空吗？\n这将删除你所有添加的菜品和图片链接！")) {
-            localStorage.removeItem('aygj_v25');
+        if(confirm("⚠️ 确定要清空所有数据，恢复初始状态吗？")) {
+            localStorage.removeItem('aygj_v27');
             data = JSON.parse(JSON.stringify(defaultData));
             saveData(); renderAll(); closeModal('backupModal');
-            alert("✅ 数据已清空，现在你可以尽情添加链接了！");
+            alert("✅ 数据已重置！");
         }
     }
 
@@ -352,14 +392,16 @@
     function createCard(item, tab, cat, idx) {
         const div = document.createElement('div'); const order = orders[item.n]; let cls = "card"; let badges = "";
         if(order) {
-            if(order.bf?.active) { cls+=" sel-bf"; badges+=`<span class="badge bg-bf">早${order.bf.count>1?'x'+order.bf.count:''}</span>`; }
-            if(order.lunch?.active) { cls+=" sel-lunch"; badges+=`<span class="badge bg-lunch">午${order.lunch.count>1?'x'+order.lunch.count:''}</span>`; }
-            if(order.dinner?.active) { if(cls.includes("sel-lunch")) cls="card sel-both"; else cls+=" sel-dinner"; badges+=`<span class="badge ${order.dinner.mode==='prep'?'bg-prep':'bg-dinner'}">${order.dinner.mode==='prep'?'切':'晚'}${order.dinner.count>1?'x'+order.dinner.count:''}</span>`; }
+            if(order.bf?.active) { cls+=" sel-bf"; badges+=`<span class="badge">早${order.bf.count>1?'x'+order.bf.count:''}</span>`; }
+            if(order.lunch?.active) { cls+=" sel-lunch"; badges+=`<span class="badge">午${order.lunch.count>1?'x'+order.lunch.count:''}</span>`; }
+            if(order.dinner?.active) { if(cls.includes("sel-lunch")) cls="card sel-both"; else cls+=" sel-dinner"; badges+=`<span class="badge">${order.dinner.mode==='prep'?'切':'晚'}${order.dinner.count>1?'x'+order.dinner.count:''}</span>`; }
         }
-        // 如果没有图片，使用默认占位图
-        const imgUrl = item.img || `https://via.placeholder.com/150/FFF5E8/FF7E67?text=${item.n[0]}`;
         div.className = cls;
-        div.innerHTML = `<img src="${imgUrl}" class="card-img"><div class="card-body"><div class="card-name">${item.n}</div><div>${badges}</div></div><div class="card-mask"><div class="mini-btn" onclick="event.stopPropagation();openDishModal('${tab}','${cat}',${idx})">✎ 修改</div></div>`;
+        // V27: 纯文字版卡片结构
+        div.innerHTML = `
+            <div class="card-body"><div class="card-name">${item.n}</div><div>${badges}</div></div>
+            <div class="card-edit-btn" onclick="event.stopPropagation();openDishModal('${tab}','${cat}',${idx})">✎</div>
+        `;
         div.onclick = () => { if(!document.body.classList.contains('edit-mode')) openOrderModal(item, tab); };
         return div;
     }
@@ -367,37 +409,15 @@
     function renameCat(tab, old) { const n=prompt("新名字", old); if(n&&n!==old&&!data[tab][n]){const i=data[tab][old]; delete data[tab][old]; data[tab][n]=i; saveData(); renderAll();} }
     function delCat(tab, cat) { if(confirm(`删除【${cat}】？`)){delete data[tab][cat]; saveData(); renderAll();} }
 
-    // --- V25 编辑逻辑 (只保留链接) ---
     function openDishModal(tab, cat, idx) {
         editCtx = { tab, cat, idx, isNew: idx===-1 }; const item = idx===-1 ? {n:"", prep:""} : data[tab][cat][idx];
         document.getElementById('dm-title').innerText = editCtx.isNew?"✨ 添加":"✨ 修改"; document.getElementById('dm-name').value = item.n; document.getElementById('dm-prep').value = item.prep||"";
-        
-        // 处理链接显示
-        const url = item.img || "";
-        document.getElementById('dm-img-url').value = url;
-        document.getElementById('dm-preview').style.backgroundImage = url ? `url(${url})` : "none";
-        document.getElementById('dm-preview').innerHTML = url ? "" : "<span>👀 预览区域</span>";
-        
         document.getElementById('dm-btn-del').style.display = editCtx.isNew?'none':'block'; document.getElementById('dishModal').classList.add('show');
-    }
-    
-    function handleUrlInput(input) {
-        const url = input.value.trim();
-        const prev = document.getElementById('dm-preview');
-        if(url) {
-            prev.style.backgroundImage = `url(${url})`;
-            prev.innerHTML = "";
-        } else {
-            prev.style.backgroundImage = "none";
-            prev.innerHTML = "<span>👀 预览区域</span>";
-        }
     }
     
     function saveDishTemp() {
         const n = document.getElementById('dm-name').value; if(!n) return;
-        const url = document.getElementById('dm-img-url').value.trim();
-        
-        const item = { n, img: url, prep: document.getElementById('dm-prep').value };
+        const item = { n, prep: document.getElementById('dm-prep').value };
         if(editCtx.isNew) data[editCtx.tab][editCtx.cat].push(item); else data[editCtx.tab][editCtx.cat][editCtx.idx] = item;
         saveData(); closeModal('dishModal'); renderAll();
     }
