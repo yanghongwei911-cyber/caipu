@@ -6,30 +6,19 @@
     <title>大奇奇的美味指令</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        /* --- V28 四列大字版配色 --- */
+        /* --- V29 智能清理版 --- */
         :root {
-            --primary: #FF7E67; 
-            --bg: #FFFBF5; 
-            --card-bg: #FFFFFF;
-            --text-main: #5D5550; 
-            --text-sub: #AFA6A0;
-            
-            --lunch-color: #FFB03B; 
-            --dinner-color: #9D8FFF; 
-            --bf-color: #7ED38C;     
-            
-            --radius: 12px; /* 圆角稍微收一点，适应小方块 */
+            --primary: #FF7E67; --bg: #FFFBF5; --card-bg: #FFFFFF;
+            --text-main: #5D5550; --text-sub: #AFA6A0;
+            --lunch-color: #FFB03B; --dinner-color: #9D8FFF; --bf-color: #7ED38C;     
+            --radius: 12px;
         }
-
         body {
             font-family: "PingFang SC", -apple-system, sans-serif;
             background-color: var(--bg); color: var(--text-main); margin: 0;
-            padding-bottom: 120px; 
-            -webkit-tap-highlight-color: transparent; 
+            padding-bottom: 120px; -webkit-tap-highlight-color: transparent; 
             user-select: none; -webkit-user-select: none;
         }
-
-        /* 顶部 */
         .header {
             background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             padding: 12px 15px; position: sticky; top: 0; z-index: 100;
@@ -43,132 +32,64 @@
             padding: 5px 10px; border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.3s;
         }
         .header-btn-right.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 126, 103, 0.3); }
-
-        /* 标签页 */
         .tabs { display: flex; background: #F5F0EB; padding: 4px; margin: 10px 15px; border-radius: 25px; }
         .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 700; color: var(--text-sub); border-radius: 20px; transition: 0.2s;}
         .tab.active { background: #FFFFFF; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
-
         .section { display: none; padding: 0 15px; }
         .section.active { display: block; }
-
-        /* --- 核心布局：四列正方形网格 --- */
-        .grid { 
-            display: grid; 
-            /* 强制 4 列 */
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 8px; /* 间距紧凑 */
-            min-height: 10px; 
-        }
         
+        /* 四列布局 */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; min-height: 10px; }
         .cat-wrapper { margin-bottom: 20px; }
         body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 8px; border: 2px dashed #FFD1C7; border-radius: 15px;}
-
         .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin-bottom: 5px;}
         .cat-title { font-size: 16px; font-weight: 800; color: #5D5550; display: flex; align-items: center; gap: 6px; }
         .cat-title::before { content:''; width:6px; height:6px; background:var(--primary); border-radius:50%; opacity: 0.6;}
-        
         .tools { display: none; align-items: center; gap: 12px; }
         body.edit-mode .tools { display: flex; }
         .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
         .drag-handle { font-size: 20px; color: #D1C7C0; cursor: grab; padding: 0 10px; touch-action: none; }
 
-        /* --- V28 卡片样式 --- */
+        /* 卡片样式 */
         .card {
-            background: #FFFFFF; 
-            border-radius: var(--radius); 
-            position: relative; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            /* 强制正方形 */
-            aspect-ratio: 1 / 1; 
+            background: #FFFFFF; border-radius: var(--radius); position: relative; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); aspect-ratio: 1 / 1; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center;
-            padding: 4px; /* 极小内边距，给文字留空间 */
-            border: 2px solid transparent;
-            transition: all 0.1s;
-            -webkit-touch-callout: none;
-            overflow: hidden;
+            text-align: center; padding: 4px; border: 2px solid transparent;
+            transition: all 0.1s; -webkit-touch-callout: none; overflow: hidden;
         }
         .card:active { transform: scale(0.92); }
-
-        /* 菜名：加大加粗 */
         .card-name { 
-            font-size: 15px; /* 手机上这个字号在小格子里算大的 */
-            font-weight: 800; /* 更加醒目 */
-            color: #5D5550; 
-            margin: 0; 
-            line-height: 1.2;
-            width: 100%;
-            /* 允许换行，防止字数多显示不全 */
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden; 
+            font-size: 15px; font-weight: 800; color: #5D5550; margin: 0; line-height: 1.2; width: 100%;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; 
         }
-
-        /* 选中状态：全卡片变色，去掉文字徽章 */
         .card.sel-bf { background: var(--bf-color); color: white; border-color: var(--bf-color); }
         .card.sel-lunch { background: var(--lunch-color); color: white; border-color: var(--lunch-color); }
         .card.sel-dinner { background: var(--dinner-color); color: white; border-color: var(--dinner-color); }
         .card.sel-both { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* 选中后文字强制变白 */
         .card[class*="sel-"] .card-name { color: white; }
-
-        /* 数量小角标 (仅当数量>1时显示) */
-        .count-badge {
-            position: absolute; top: 2px; right: 2px;
-            background: rgba(0,0,0,0.2); color: white;
-            font-size: 10px; padding: 1px 5px; border-radius: 8px;
-            font-weight: bold; display: none;
-        }
+        .count-badge { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.2); color: white; font-size: 10px; padding: 1px 5px; border-radius: 8px; font-weight: bold; display: none; }
         .card.has-count .count-badge { display: block; }
-
-        /* 备注小圆点 (如果有备注，显示个小点提示) */
-        .note-dot {
-            position: absolute; bottom: 4px;
-            width: 4px; height: 4px; border-radius: 50%;
-            background: rgba(255,255,255,0.8); display: none;
-        }
+        .note-dot { position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.8); display: none; }
         .card.has-note .note-dot { display: block; }
-
-        /* 编辑模式按钮 */
-        .card-edit-btn {
-            position: absolute; top: 0; right: 0; bottom: 0; left: 0;
-            background: rgba(255,255,255,0.8); 
-            display: none; align-items: center; justify-content: center;
-            z-index: 10; color: var(--primary); font-weight: bold; font-size: 12px;
-            border-radius: var(--radius);
-        }
+        .card-edit-btn { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 10; color: var(--primary); font-weight: bold; font-size: 12px; border-radius: var(--radius); }
         body.edit-mode .card-edit-btn { display: flex; }
         body.edit-mode .card { border: 1px dashed #E0D8D5; background: #FCFAF9; box-shadow: none; }
 
-        /* 设置面板 */
         .settings-panel { background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; }
         .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;}
-        .chip { 
-            padding: 6px 12px; background: #F7F4F2; border-radius: 15px; font-size: 12px; position: relative; 
-            color: #6D635E; font-weight: 600; transition: 0.2s;
-        }
+        .chip { padding: 6px 12px; background: #F7F4F2; border-radius: 15px; font-size: 12px; position: relative; color: #6D635E; font-weight: 600; transition: 0.2s; }
         .chip.bf-active { background: var(--bf-color); color: white; }
         .chip.lunch-active { background: var(--lunch-color); color: white; }
         .chip.dinner-active { background: var(--dinner-color); color: white; }
         .chip-del { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; background: #FF6B6B; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; border: 1px solid white;}
         body.edit-mode .chip-del { display: flex; }
 
-        .footer {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
-            padding: 12px 20px; z-index: 200; padding-bottom: max(15px, env(safe-area-inset-bottom));
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
-        }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); padding: 12px 20px; z-index: 200; padding-bottom: max(15px, env(safe-area-inset-bottom)); box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
         .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 25px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 20px rgba(255, 126, 103, 0.3); }
-
-        /* 弹窗 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(93, 85, 80, 0.4); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
         .modal-overlay.show { display: flex; }
         .modal-sheet { background: #FFFFFF; width: 100%; max-width: 500px; border-radius: 25px 25px 0 0; padding: 25px; padding-bottom: max(30px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; }
-        
         input, textarea { width: 100%; padding: 12px; border: 2px solid #F2EEEA; border-radius: 12px; box-sizing: border-box; background: #FCFAF8; font-size: 15px; margin-bottom: 10px; color: var(--text-main);}
         input:focus, textarea:focus { border-color: var(--primary); outline: none; background: white; }
         .btn-full { width: 100%; padding: 12px; border-radius: 15px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px;}
@@ -176,7 +97,6 @@
         .btn-danger { background: #FFB0B0; color: white; }
         .btn-secondary { background: #F0EBE8; color: #6D635E; }
         .btn-cancel-item { font-size: 13px; color: #FF6B6B; background: #FFF0F0; border: 1px solid #FFDEDE; padding: 6px 12px; border-radius: 15px; cursor: pointer; float: right; margin-top: 10px; font-weight: 600;}
-
         .meal-section { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; border: 2px solid #F5F0ED; transition: 0.2s; }
         .meal-section.active { border-color: var(--primary); background: #FFF5F2; }
         .meal-section.active-bf { border-color: var(--bf-color); background: #F2FDF5; }
@@ -250,13 +170,13 @@
     <div class="modal-sheet">
         <div class="sheet-title" style="margin-bottom:10px;">⚙️ 设置 & 备份</div>
         <div style="background:#FFF0F0; padding:15px; border-radius:15px; margin-bottom:20px; text-align:center;">
-            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 重置所有数据</p>
-            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空</button>
+            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 必须先点此清空旧垃圾</p>
+            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空 (修复报错)</button>
         </div>
         <p style="font-size:13px; color:#666; margin-bottom:10px;"><b>备份代码</b> (发给大奇奇同步用):</p>
         <textarea id="backup-area" class="backup-textarea"></textarea>
         <div class="action-group">
-            <button class="btn-full btn-secondary" onclick="doExport()">📤 复制</button>
+            <button class="btn-full btn-secondary" onclick="doExport()">📤 复制备份</button>
             <button class="btn-full btn-primary" onclick="doImport()">📥 粘贴恢复</button>
         </div>
         <button class="btn-full" style="background:transparent; color:#999; margin-top:10px;" onclick="closeModal('backupModal')">关闭</button>
@@ -321,7 +241,6 @@
         <input type="text" id="dm-name" placeholder="如: 番茄炒蛋">
         <label style="font-weight:700; margin-bottom:5px; display:block;">默认备注 (记忆)</label>
         <input type="text" id="dm-prep" placeholder="如: 切小块">
-        
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-full btn-danger" id="dm-btn-del" onclick="deleteDish()">删除</button>
             <button class="btn-full btn-primary" onclick="saveDishTemp()">保存好啦</button>
@@ -350,24 +269,44 @@
     let data = {}; let orders = {}; let orderCtx=null; let editCtx=null; let tmpB=""; let tmpL=""; let tmpD="";
 
     function init() {
-        const saved = localStorage.getItem('aygj_v28'); 
+        const saved = localStorage.getItem('aygj_v29'); // KEY V29
         if(saved) { try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); } } 
         else { data = JSON.parse(JSON.stringify(defaultData)); }
         if(!data.bf) data.bf={}; if(!data.main) data.main={};
         renderAll();
     }
 
+    // --- V29 核心修复：带自动清理的保存 ---
     function saveData() { 
-        try { localStorage.setItem('aygj_v28', JSON.stringify(data)); return true; } 
-        catch(e) { alert("❌ 存储出错！"); return false; } 
+        try { 
+            localStorage.setItem('aygj_v29', JSON.stringify(data)); 
+            return true; 
+        } catch(e) { 
+            if (confirm("⚠️ 手机存储满了（因为旧版本的图片还在占位）\n\n点击【确定】，我帮你自动清理旧数据并保存！")) {
+                // 1. 获取当前版本的数据备份
+                const currentData = JSON.stringify(data);
+                // 2. 清空所有LocalStorage
+                localStorage.clear();
+                // 3. 重新写入当前数据
+                try {
+                    localStorage.setItem('aygj_v29', currentData);
+                    alert("✅ 清理成功！菜单已保存！");
+                    return true;
+                } catch (err) {
+                    alert("❌ 清理后依然存不下，请尝试手动清除浏览器缓存。");
+                    return false;
+                }
+            }
+            return false; 
+        } 
     }
     
     function clearAllData() {
-        if(confirm("⚠️ 确定要重置所有数据吗？")) {
-            localStorage.removeItem('aygj_v28');
+        if(confirm("⚠️ 确定要重置？这将清除所有旧图片和缓存，解决报错问题。")) {
+            localStorage.clear(); // 彻底清空
             data = JSON.parse(JSON.stringify(defaultData));
             saveData(); renderAll(); closeModal('backupModal');
-            alert("✅ 数据已重置！");
+            alert("✅ 垃圾已清理，现在可以正常使用了！");
         }
     }
 
