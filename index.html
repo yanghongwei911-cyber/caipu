@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>阿姨管家 V17 (修复版)</title>
+    <title>阿姨管家 V18 (顺滑交互版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         :root {
@@ -42,22 +42,19 @@
 
         /* 分类容器 */
         .cat-wrapper { margin-bottom: 15px; background: transparent; border-radius: 12px; transition: 0.2s; }
-        /* 编辑模式下，给大类加个背景，看得更清楚 */
         body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 10px; border: 1px dashed #ccc; }
 
         .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; }
         .cat-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
         .cat-title::before { content:''; width:4px; height:16px; background:var(--primary); border-radius:2px; }
         
-        /* 图标按钮组 */
         .tools { display: none; align-items: center; gap: 10px; }
         body.edit-mode .tools { display: flex; }
         .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
         
-        /* 关键修复：大类拖拽手柄 */
         .drag-handle {
             font-size: 22px; color: var(--text-main); cursor: grab; padding: 0 10px;
-            touch-action: none; /* 防止滚动冲突 */
+            touch-action: none;
         }
 
         /* 菜品网格 */
@@ -124,24 +121,22 @@
         .btn-full { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 5px;}
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: #FF3B30; color: white; }
+        .btn-secondary { background: #E5E5EA; color: #000; } /* 新增灰色按钮 */
+        
         .upload-area {
             width: 100%; height: 100px; border: 2px dashed #ccc; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             color: #999; font-weight: 600; margin-bottom: 15px; background-size: contain; background-repeat: no-repeat; background-position: center;
         }
 
-        /* 点餐详情区 (修复展开逻辑) */
+        /* 点餐详情区 */
         .meal-section { background: #F9F9F9; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 2px solid transparent; transition: 0.2s; }
         .meal-section.active { border-color: var(--primary); background: #F0F8FF; }
-        .meal-section.active-bf { border-color: var(--bf-color); background: #F0FFF4; } /* 早餐选中绿底 */
+        .meal-section.active-bf { border-color: var(--bf-color); background: #F0FFF4; }
         
         .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; }
-        
-        /* 默认隐藏详情 */
         .detail-box { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); }
-        /* 选中后显示详情 (关键CSS) */
-        .meal-section.active .detail-box, 
-        .meal-section.active-bf .detail-box { display: block; }
+        .meal-section.active .detail-box, .meal-section.active-bf .detail-box { display: block; }
 
         .stepper { display: flex; gap: 15px; align-items: center; }
         .step-btn { width: 32px; height: 32px; background: white; border: 1px solid #ddd; border-radius: 50%; font-weight: bold; font-size: 18px; display:flex; align-items:center; justify-content:center;}
@@ -157,12 +152,16 @@
         .chip.dinner-active { background: var(--dinner-color); color: white; }
         .chip-del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #FF3B30; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold;}
         body.edit-mode .chip-del { display: flex; }
+
+        /* V18 新增：结果页按钮组 */
+        .action-group { display: flex; gap: 15px; margin-top: 10px; }
+        .action-group .btn-full { margin-top: 0; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>🍱 阿姨管家 V17</h1>
+    <h1>🍱 阿姨管家 V18</h1>
     <div class="action-btn" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑 / 排序</div>
 </div>
 
@@ -286,7 +285,11 @@
     <div class="modal-sheet">
         <div class="sheet-title" style="margin-bottom:15px;">生成结果</div>
         <textarea id="final-text" style="height:200px;"></textarea>
-        <button class="btn-full btn-primary" onclick="copyText()">复制内容</button>
+        
+        <div class="action-group">
+            <button class="btn-full btn-secondary" onclick="closeModal('resultModal')">🔙 返回修改</button>
+            <button class="btn-full btn-primary" id="btn-copy" onclick="copyText()">📄 复制内容</button>
+        </div>
     </div>
 </div>
 
@@ -300,20 +303,18 @@
     };
     let data = {}; let orders = {}; 
     let orderCtx=null; let editCtx=null;
-    let tmpL = ""; let tmpD = ""; // 临时存储选中的人数
+    let tmpL = ""; let tmpD = ""; 
 
     // --- 2. 初始化 ---
     function init() {
-        const saved = localStorage.getItem('aygj_v17');
+        const saved = localStorage.getItem('aygj_v18');
         if(saved) {
             try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); }
         } else {
             data = JSON.parse(JSON.stringify(defaultData));
         }
-        // 确保数据结构完整（修复早餐可能缺失的问题）
         if(!data.bf) data.bf = {};
         if(!data.main) data.main = {};
-        
         renderAll();
     }
 
@@ -323,9 +324,8 @@
         const btn = document.getElementById('mainActionBtn');
         
         if (body.classList.contains('edit-mode')) {
-            // 保存并退出
             try {
-                localStorage.setItem('aygj_v17', JSON.stringify(data));
+                localStorage.setItem('aygj_v18', JSON.stringify(data));
                 alert("✅ 修改已保存！");
             } catch(e) { alert("保存失败，可能是图片太多了。"); }
             
@@ -334,15 +334,14 @@
             btn.classList.remove('saving-mode');
             document.getElementById('add-cat-bf').style.display = 'none';
             document.getElementById('add-cat-main').style.display = 'none';
-            renderAll(); // 重新渲染去掉拖拽手柄
+            renderAll(); 
         } else {
-            // 进入编辑
             body.classList.add('edit-mode');
             btn.innerText = "💾 保存修改";
             btn.classList.add('saving-mode');
             document.getElementById('add-cat-bf').style.display = 'block';
             document.getElementById('add-cat-main').style.display = 'block';
-            renderAll(); // 重新渲染显示手柄
+            renderAll(); 
         }
     }
 
@@ -359,7 +358,6 @@
         const isEdit = document.body.classList.contains('edit-mode');
         const db = data[tab];
 
-        // 遍历分类
         for (let cat in db) {
             const wrapper = document.createElement('div');
             wrapper.className = "cat-wrapper";
@@ -367,7 +365,6 @@
 
             const header = document.createElement('div');
             header.className = "cat-header";
-            // 修复重点：添加了 drag-handle (≡)
             header.innerHTML = `
                 <div class="cat-title">
                     <span>${cat}</span> 
@@ -393,11 +390,10 @@
             wrapper.appendChild(grid);
             container.appendChild(wrapper);
 
-            // 菜品拖拽 (仅编辑模式)
             if (isEdit) {
                 new Sortable(grid, {
                     animation: 150,
-                    delay: 200, delayOnTouchOnly: true, // 长按拖拽菜品
+                    delay: 200, delayOnTouchOnly: true,
                     ghostClass: 'sortable-ghost',
                     dragClass: 'sortable-drag',
                     onEnd: (evt) => {
@@ -408,13 +404,11 @@
             }
         }
 
-        // 大类拖拽 (修复重点：使用 handle)
         if (isEdit) {
             new Sortable(container, {
                 animation: 150,
-                handle: '.drag-handle', // 只有按住这个图标才能拖拽大类
+                handle: '.drag-handle', 
                 onEnd: (evt) => {
-                    // 重建对象顺序
                     const newDb = {};
                     container.querySelectorAll('.cat-wrapper').forEach(w => {
                         newDb[w.dataset.cat] = data[tab][w.dataset.cat];
@@ -457,7 +451,7 @@
         if(n) {
             if(!data[tab]) data[tab] = {};
             if(data[tab][n]) { alert("名称已存在"); return; }
-            data[tab][n] = []; // 初始化为空数组
+            data[tab][n] = []; 
             renderAll();
         }
     }
@@ -519,7 +513,7 @@
         }
     }
 
-    // --- 7. 业务逻辑：点餐 (修复早餐份数显示) ---
+    // --- 7. 业务逻辑：点餐 ---
     function openOrderModal(item, tab) {
         orderCtx = { item, tab };
         const order = orders[item.n] || {};
@@ -528,17 +522,13 @@
         document.getElementById('panel-bf').style.display = tab==='bf'?'block':'none';
         document.getElementById('panel-main').style.display = tab==='main'?'block':'none';
         
-        // 重置所有输入
         document.getElementById('note-bf').value = "";
         document.getElementById('note-lunch').value = "";
         document.getElementById('note-dinner').value = "";
 
         if(tab === 'bf') {
             updateUI('bf', order.bf);
-            // 修复体验：如果是新打开且没点过，自动展开让用户选份数
-            if (!order.bf || !order.bf.active) {
-               toggleMeal('bf'); // 自动帮你点一下展开
-            }
+            if (!order.bf || !order.bf.active) { toggleMeal('bf'); }
         } else {
             updateUI('lunch', order.lunch);
             updateUI('dinner', order.dinner);
@@ -554,13 +544,10 @@
         const chk = document.getElementById(t==='bf'?'chk-bf':(t==='lunch'?'chk-lunch':'chk-dinner'));
         const cls = t==='bf'?'active-bf':'active';
         
-        // 切换类
         sec.classList.toggle(cls);
         
-        // 视觉反馈
         if(sec.classList.contains(cls)) {
             chk.innerHTML = "✓";
-            // 如果是刚打开，重置数量为1
             const qtyId = t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner');
             if(document.getElementById(qtyId).innerText === "0") document.getElementById(qtyId).innerText = "1";
         } else {
@@ -591,16 +578,13 @@
         const item = orderCtx.item;
         if(!orders[item.n]) orders[item.n] = {};
         
-        // 早餐逻辑
         if(orderCtx.tab === 'bf') {
             if(document.getElementById('sec-bf').classList.contains('active-bf')) {
                 orders[item.n].bf = { active:true, count:getQty('bf'), note:getVal('note-bf') };
             } else {
                 delete orders[item.n].bf;
             }
-        } 
-        // 正餐逻辑
-        else {
+        } else {
             if(document.getElementById('sec-lunch').classList.contains('active')) {
                 orders[item.n].lunch = { active:true, count:getQty('lunch'), note:getVal('note-lunch') };
             } else delete orders[item.n].lunch;
@@ -614,11 +598,9 @@
                 };
             } else delete orders[item.n].dinner;
         }
-        
         closeModal('orderModal'); renderAll();
     }
 
-    // --- 辅助函数 ---
     function getQty(t) { return parseInt(document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')).innerText); }
     function getVal(id) { return document.getElementById(id).value; }
     function adjQty(t, d) {
@@ -632,7 +614,6 @@
         if(ui) document.getElementById('note-dinner').value = m==='prep'?(orderCtx.item.prep||""):"";
     }
     
-    // --- 设置 & 生成 ---
     function renderSettings() {
         renderChips('chips-lunchPpl', data.options.lunchPpl, 'lunchPpl');
         renderChips('chips-dinnerRice', data.options.dinnerRice, 'dinnerRice');
@@ -661,6 +642,11 @@
     function editLabel(k) { const v=prompt("新标题", data.labels[k]); if(v){data.labels[k]=v; renderSettings();} }
     
     function generate() {
+        // 先重置按钮状态
+        const btn = document.getElementById('btn-copy');
+        btn.innerText = "📄 复制内容";
+        btn.style.backgroundColor = "var(--primary)";
+
         let msg = "阿姨，明天饭菜安排：\n";
         let bf=[], lu=[], di=[];
         
@@ -683,7 +669,18 @@
         
         document.getElementById('final-text').value=msg; document.getElementById('resultModal').classList.add('show');
     }
-    function copyText(){ document.getElementById('final-text').select(); document.execCommand('copy'); alert("已复制"); }
+    
+    // 改进的复制逻辑
+    function copyText(){ 
+        document.getElementById('final-text').select(); 
+        document.execCommand('copy'); 
+        
+        // 视觉反馈，而不是弹窗
+        const btn = document.getElementById('btn-copy');
+        btn.innerText = "✅ 已复制";
+        btn.style.backgroundColor = "#34C759";
+    }
+    
     function closeModal(id){ document.getElementById(id).classList.remove('show'); }
     function switchTab(t){ 
         document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
