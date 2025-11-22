@@ -6,63 +6,42 @@
     <title>大奇奇的美味指令</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        /* --- V29 智能清理版 --- */
-        :root {
-            --primary: #FF7E67; --bg: #FFFBF5; --card-bg: #FFFFFF;
-            --text-main: #5D5550; --text-sub: #AFA6A0;
-            --lunch-color: #FFB03B; --dinner-color: #9D8FFF; --bf-color: #7ED38C;     
-            --radius: 12px;
-        }
-        body {
-            font-family: "PingFang SC", -apple-system, sans-serif;
-            background-color: var(--bg); color: var(--text-main); margin: 0;
-            padding-bottom: 120px; -webkit-tap-highlight-color: transparent; 
-            user-select: none; -webkit-user-select: none;
-        }
-        .header {
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            padding: 12px 15px; position: sticky; top: 0; z-index: 100;
-            display: flex; justify-content: center; align-items: center;
-            border-bottom: 1px dashed rgba(0,0,0,0.05);
-        }
+        /* --- V36 样式 --- */
+        :root { --primary: #FF7E67; --bg: #FFFBF5; --card-bg: #FFFFFF; --text-main: #5D5550; --text-sub: #AFA6A0; --lunch-color: #FFB03B; --dinner-color: #9D8FFF; --bf-color: #7ED38C; --radius: 12px; }
+        body { font-family: "PingFang SC", -apple-system, sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding-bottom: 120px; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        .header { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 12px 15px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: center; align-items: center; border-bottom: 1px dashed rgba(0,0,0,0.05); }
         .header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
-        .header-btn-left { position: absolute; left: 15px; font-size: 20px; cursor: pointer; padding: 5px; }
-        .header-btn-right {
-            position: absolute; right: 15px; font-size: 12px; background: #FFF0EB; color: var(--primary);
-            padding: 5px 10px; border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.3s;
-        }
+        
+        /* 左侧按钮组 (修复点) */
+        .header-left-group { position: absolute; left: 15px; display: flex; gap: 15px; align-items: center; }
+        .header-icon { font-size: 20px; cursor: pointer; }
+        
+        /* 同步动画 */
+        .spinning { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .header-btn-right { position: absolute; right: 15px; font-size: 12px; background: #FFF0EB; color: var(--primary); padding: 5px 10px; border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
         .header-btn-right.saving-mode { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 126, 103, 0.3); }
+
         .tabs { display: flex; background: #F5F0EB; padding: 4px; margin: 10px 15px; border-radius: 25px; }
-        .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 700; color: var(--text-sub); border-radius: 20px; transition: 0.2s;}
-        .tab.active { background: #FFFFFF; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 700; color: var(--text-sub); border-radius: 20px; transition: 0.2s; }
+        .tab.active { background: #FFFFFF; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .section { display: none; padding: 0 15px; }
         .section.active { display: block; }
-        
-        /* 四列布局 */
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; min-height: 10px; }
         .cat-wrapper { margin-bottom: 20px; }
-        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 8px; border: 2px dashed #FFD1C7; border-radius: 15px;}
-        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin-bottom: 5px;}
+        body.edit-mode .cat-wrapper { background: rgba(255,255,255,0.5); padding: 8px; border: 2px dashed #FFD1C7; border-radius: 15px; }
+        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin-bottom: 5px; }
         .cat-title { font-size: 16px; font-weight: 800; color: #5D5550; display: flex; align-items: center; gap: 6px; }
-        .cat-title::before { content:''; width:6px; height:6px; background:var(--primary); border-radius:50%; opacity: 0.6;}
+        .cat-title::before { content:''; width:6px; height:6px; background:var(--primary); border-radius:50%; opacity: 0.6; }
         .tools { display: none; align-items: center; gap: 12px; }
         body.edit-mode .tools { display: flex; }
         .icon-btn { font-size: 14px; color: var(--text-sub); padding: 4px; }
         .drag-handle { font-size: 20px; color: #D1C7C0; cursor: grab; padding: 0 10px; touch-action: none; }
-
-        /* 卡片样式 */
-        .card {
-            background: #FFFFFF; border-radius: var(--radius); position: relative; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03); aspect-ratio: 1 / 1; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 4px; border: 2px solid transparent;
-            transition: all 0.1s; -webkit-touch-callout: none; overflow: hidden;
-        }
+        .card { background: #FFFFFF; border-radius: var(--radius); position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.03); aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4px; border: 2px solid transparent; transition: all 0.1s; -webkit-touch-callout: none; overflow: hidden; }
         .card:active { transform: scale(0.92); }
-        .card-name { 
-            font-size: 15px; font-weight: 800; color: #5D5550; margin: 0; line-height: 1.2; width: 100%;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; 
-        }
+        .card-name { font-size: 15px; font-weight: 800; color: #5D5550; margin: 0; line-height: 1.2; width: 100%; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .card.sel-bf { background: var(--bf-color); color: white; border-color: var(--bf-color); }
         .card.sel-lunch { background: var(--lunch-color); color: white; border-color: var(--lunch-color); }
         .card.sel-dinner { background: var(--dinner-color); color: white; border-color: var(--dinner-color); }
@@ -75,28 +54,26 @@
         .card-edit-btn { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 10; color: var(--primary); font-weight: bold; font-size: 12px; border-radius: var(--radius); }
         body.edit-mode .card-edit-btn { display: flex; }
         body.edit-mode .card { border: 1px dashed #E0D8D5; background: #FCFAF9; box-shadow: none; }
-
         .settings-panel { background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; }
-        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;}
+        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .chip { padding: 6px 12px; background: #F7F4F2; border-radius: 15px; font-size: 12px; position: relative; color: #6D635E; font-weight: 600; transition: 0.2s; }
         .chip.bf-active { background: var(--bf-color); color: white; }
         .chip.lunch-active { background: var(--lunch-color); color: white; }
         .chip.dinner-active { background: var(--dinner-color); color: white; }
-        .chip-del { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; background: #FF6B6B; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; border: 1px solid white;}
+        .chip-del { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; background: #FF6B6B; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; border: 1px solid white; }
         body.edit-mode .chip-del { display: flex; }
-
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); padding: 12px 20px; z-index: 200; padding-bottom: max(15px, env(safe-area-inset-bottom)); box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
         .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 25px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 20px rgba(255, 126, 103, 0.3); }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(93, 85, 80, 0.4); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
         .modal-overlay.show { display: flex; }
         .modal-sheet { background: #FFFFFF; width: 100%; max-width: 500px; border-radius: 25px 25px 0 0; padding: 25px; padding-bottom: max(30px, env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; }
-        input, textarea { width: 100%; padding: 12px; border: 2px solid #F2EEEA; border-radius: 12px; box-sizing: border-box; background: #FCFAF8; font-size: 15px; margin-bottom: 10px; color: var(--text-main);}
+        input, textarea { width: 100%; padding: 12px; border: 2px solid #F2EEEA; border-radius: 12px; box-sizing: border-box; background: #FCFAF8; font-size: 15px; margin-bottom: 10px; color: var(--text-main); }
         input:focus, textarea:focus { border-color: var(--primary); outline: none; background: white; }
-        .btn-full { width: 100%; padding: 12px; border-radius: 15px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px;}
+        .btn-full { width: 100%; padding: 12px; border-radius: 15px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: #FFB0B0; color: white; }
         .btn-secondary { background: #F0EBE8; color: #6D635E; }
-        .btn-cancel-item { font-size: 13px; color: #FF6B6B; background: #FFF0F0; border: 1px solid #FFDEDE; padding: 6px 12px; border-radius: 15px; cursor: pointer; float: right; margin-top: 10px; font-weight: 600;}
+        .btn-cancel-item { font-size: 13px; color: #FF6B6B; background: #FFF0F0; border: 1px solid #FFDEDE; padding: 6px 12px; border-radius: 15px; cursor: pointer; float: right; margin-top: 10px; font-weight: 600; }
         .meal-section { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; border: 2px solid #F5F0ED; transition: 0.2s; }
         .meal-section.active { border-color: var(--primary); background: #FFF5F2; }
         .meal-section.active-bf { border-color: var(--bf-color); background: #F2FDF5; }
@@ -104,26 +81,32 @@
         .detail-box { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.08); }
         .meal-section.active .detail-box, .meal-section.active-bf .detail-box { display: block; }
         .stepper { display: flex; gap: 15px; align-items: center; }
-        .step-btn { width: 32px; height: 32px; background: white; border: 2px solid #EFEBE9; border-radius: 50%; color: var(--primary); font-weight: 900; font-size: 18px; display:flex; align-items:center; justify-content:center;}
+        .step-btn { width: 32px; height: 32px; background: white; border: 2px solid #EFEBE9; border-radius: 50%; color: var(--primary); font-weight: 900; font-size: 18px; display:flex; align-items:center; justify-content:center; }
         .toggle-row { display: flex; background: #F0EBE8; padding: 4px; border-radius: 12px; margin-bottom: 12px; }
-        .toggle-opt { flex: 1; text-align: center; padding: 8px; font-size: 13px; border-radius: 10px; color: #999; font-weight: 600;}
+        .toggle-opt { flex: 1; text-align: center; padding: 10px; font-size: 14px; border-radius: 10px; color: #999; font-weight: 600; }
         .toggle-opt.selected { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .action-group { display: flex; gap: 15px; margin-top: 10px; }
         .action-group .btn-full { margin-top: 0; }
+        .search-box { margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 12px 15px; border: 2px solid #F2EEEA; border-radius: 25px; background: #FFFFFF; font-size: 15px; color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.3s; }
+        .search-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 4px 12px rgba(255, 126, 103, 0.15); }
         .backup-textarea { width: 100%; height: 100px; font-family: monospace; font-size: 11px; color: #666; border: 1px solid #ccc; background: #f9f9f9; word-break: break-all;}
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="header-btn-left" onclick="openBackupModal()">⚙️</div>
+    <div class="header-left-group">
+        <div class="header-icon" onclick="openBackupModal()">⚙️</div>
+        <div class="header-icon" id="syncBtn" onclick="forceSync()">☁️</div>
+    </div>
     <h1>🎀 大奇奇的美味指令 🎀</h1>
     <div class="header-btn-right" id="mainActionBtn" onclick="toggleEditMode()">✎ 编辑菜单</div>
 </div>
 
 <div class="tabs">
     <div class="tab active" onclick="switchTab('bf')">☀️ 早餐时光</div>
-    <div class="tab" onclick="switchTab('main')">🍱 午晚正餐</div>
+    <div class="tab" onclick="switchTab('main')">🍱 午餐晚餐</div>
 </div>
 
 <div id="tab-bf" class="section active">
@@ -146,7 +129,7 @@
         </div>
         <div class="chip-container" id="chips-lunchPpl"></div>
         <input type="text" id="input-lunch-extra" placeholder="备注 (如: 想要吃红薯)" style="margin-top:12px;">
-        <div style="height:20px;"></div>
+        <div style="height:25px;"></div>
         <div style="display:flex; justify-content:space-between;">
             <span style="font-weight:800; color:var(--dinner-color);">🌙 晚餐几个人吃?</span>
             <span class="tools icon-btn" onclick="editLabel('dinnerRice')">✎</span>
@@ -154,6 +137,11 @@
         <div class="chip-container" id="chips-dinnerRice"></div>
         <input type="text" id="input-dinner-extra" placeholder="备注 (如: 吃土豆/不吃米饭)" style="margin-top:12px;">
     </div>
+    
+    <div class="search-box">
+        <input type="search" id="mainSearch" class="search-input" placeholder="🔍 搜一搜 (如: 鸡, 芹菜, 土豆...)" oninput="handleSearch()">
+    </div>
+
     <div id="container-main"></div>
     <button class="btn-full btn-primary" id="add-cat-main" style="display:none; margin-top:20px; background:#81CFE0;" onclick="addCategory('main')">+ 新增正餐种类</button>
     <div class="cat-wrapper" style="margin-top:25px;">
@@ -170,10 +158,10 @@
     <div class="modal-sheet">
         <div class="sheet-title" style="margin-bottom:10px;">⚙️ 设置 & 备份</div>
         <div style="background:#FFF0F0; padding:15px; border-radius:15px; margin-bottom:20px; text-align:center;">
-            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 必须先点此清空旧垃圾</p>
-            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空 (修复报错)</button>
+            <p style="color:#FF6B6B; font-weight:bold; margin-bottom:5px;">⚠️ 重置数据</p>
+            <button class="btn-full btn-danger" onclick="clearAllData()">🗑️ 强力清空 (拉取GitHub默认)</button>
         </div>
-        <p style="font-size:13px; color:#666; margin-bottom:10px;"><b>备份代码</b> (发给大奇奇同步用):</p>
+        <p style="font-size:13px; color:#666; margin-bottom:10px;"><b>备份代码</b> (手动同步用):</p>
         <textarea id="backup-area" class="backup-textarea"></textarea>
         <div class="action-group">
             <button class="btn-full btn-secondary" onclick="doExport()">📤 复制备份</button>
@@ -260,77 +248,99 @@
 </div>
 
 <script>
-    const defaultData = {
-        bf: { "🥪 每日主食": [{n:"绿豆粥"}, {n:"玉米"}, {n:"烧麦"}, {n:"肉包"}, {n:"红薯"}], "🥚 优质蛋白": [{n:"水煮蛋"}, {n:"荷包蛋"}, {n:"茶叶蛋"}], "🥛 每日饮品": [{n:"牛奶"}, {n:"豆浆"}, {n:"咖啡"}] },
-        main: { "🍖 大口吃肉": [{n:"红烧肉"}, {n:"粉蒸肉"}, {n:"可乐鸡翅"}, {n:"小炒黄牛肉"}], "🥬 清爽素菜": [{n:"炒青菜"}, {n:"酸辣土豆丝"}, {n:"番茄炒蛋"}, {n:"凉拌黄瓜"}] },
-        options: { bfPpl: ["1人", "2人"], lunchPpl: ["1人带饭", "2人带饭", "不带饭"], dinnerRice: ["1人米饭", "不用米饭", "1人土豆", "2人土豆"] },
-        labels: { bfPpl: "早餐几人吃", lunchPpl: "几个人带饭", dinnerRice: "晚餐几个人吃" }
-    };
+    // ============================================================
+    // 🟢 你的云端密钥
+    // ============================================================
+    const BIN_ID = "69211680ae596e708f6893ae"; 
+    const API_KEY = "$2a$10$NEHjOsfUfM1jAmhv/bKlAe1/0Zx4qaXfxjviJtcBeFus9q2IukiK6";
+    // ============================================================
+
+    const defaultData = {"bf":{"🥪 主食类":[{"n":"水煮玉米","prep":""},{"n":"面包","prep":""},{"n":"红薯"},{"n":"小米粥","prep":""},{"n":"红豆粥我们已经做好了","prep":""},{"n":"南瓜","prep":""},{"n":"玉米糊糊","prep":""}],"🥛 饮品流食类":[{"n":"牛奶"},{"n":"豆浆"},{"n":"咖啡"}],"🥚 鸡蛋类":[{"n":"水煮蛋","prep":""},{"n":"鸡蛋羹","prep":""},{"n":"煎鸡蛋","prep":""},{"n":"荷包蛋带汤葱花","prep":""}],"鸡蛋炒菜类":[{"n":"菠菜炒蛋","prep":""},{"n":"黄瓜炒蛋","prep":""},{"n":"番茄炒蛋","prep":""}],"🥬素菜类":[{"n":"随便炒一个蔬菜","prep":""},{"n":"凉拌西兰花","prep":""},{"n":"凉拌豆芽","prep":""},{"n":"香菇炒青菜","prep":""}]},"main":{"🐔鸡类":[{"n":"清炖鸡配蘸料","prep":""},{"n":"小炒鸡","prep":""},{"n":"酸辣鸡胗","prep":""},{"n":"红烧鸡","prep":""},{"n":"白切鸡配蘸料","prep":""}],"🐂牛类":[{"n":"辣椒炒牛肉","prep":""},{"n":"香菜炒牛肉","prep":"切配香菜跟牛肉"},{"n":"彩椒洋葱炒牛肉","prep":""},{"n":"土豆炖牛腩","prep":""},{"n":"牛肉炒芹菜","prep":"需要切大葱斜切切丝，牛肉切片，螺丝椒一个斜切，大蒜 3 个，番茄一个切块"},{"n":"牛肉炖白萝卜","prep":""}],"🦆鸭类":[{"n":"清炖鸭配蘸料","prep":""},{"n":"红烧鸭","prep":""},{"n":"小炒鸭","prep":""}],"海鲜类":[{"n":"清蒸鱼","prep":""},{"n":"红烧鱼","prep":""},{"n":"白灼虾","prep":""},{"n":"红烧虾","prep":""},{"n":"青椒炒鱿鱼","prep":""}],"素菜类":[{"n":"素菜你看着安排","prep":"随便切配一个蔬菜，还有配 3个蒜切片，一个小米辣"},{"n":"酸辣土豆丝","prep":""},{"n":"酸辣包包菜","prep":""},{"n":"香菇炒青菜","prep":""},{"n":"茭白丝炒青椒","prep":""},{"n":"炒豆角","prep":""}],"豆腐类":[{"n":"家常豆腐","prep":""},{"n":"麻婆豆腐","prep":""},{"n":"红烧素鸡","prep":""}],"鸡蛋类":[{"n":"韭菜炒蛋","prep":""},{"n":"夜开花炒鸡蛋","prep":""}],"凉拌菜":[{"n":"凉拌莴笋","prep":""},{"n":"凉拌豆芽","prep":""},{"n":"凉拌秋葵","prep":""}],"汤类":[]},"options":{"bfPpl":["1人","2人","3 人"],"lunchPpl":["1人带饭","2人带饭","3 人带饭","不带饭"],"dinnerRice":["1人米饭","2 人米饭","3 人米饭","蒸土豆"]},"labels":{"bfPpl":"早餐几人吃","lunchPpl":"几个人带饭","dinnerRice":"晚餐几个人吃"}};
+    
     let data = {}; let orders = {}; let orderCtx=null; let editCtx=null; let tmpB=""; let tmpL=""; let tmpD="";
 
-    function init() {
-        const saved = localStorage.getItem('aygj_v29'); // KEY V29
-        if(saved) { try { data = JSON.parse(saved); } catch(e) { data = JSON.parse(JSON.stringify(defaultData)); } } 
-        else { data = JSON.parse(JSON.stringify(defaultData)); }
-        if(!data.bf) data.bf={}; if(!data.main) data.main={};
-        renderAll();
+    async function init() {
+        if (BIN_ID.includes("请在")) {
+            const saved = localStorage.getItem('aygj_v36_local');
+            data = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+            renderAll();
+            return;
+        }
+        await loadFromCloud();
     }
 
-    // --- V29 核心修复：带自动清理的保存 ---
-    function saveData() { 
-        try { 
-            localStorage.setItem('aygj_v29', JSON.stringify(data)); 
-            return true; 
-        } catch(e) { 
-            if (confirm("⚠️ 手机存储满了（因为旧版本的图片还在占位）\n\n点击【确定】，我帮你自动清理旧数据并保存！")) {
-                // 1. 获取当前版本的数据备份
-                const currentData = JSON.stringify(data);
-                // 2. 清空所有LocalStorage
-                localStorage.clear();
-                // 3. 重新写入当前数据
-                try {
-                    localStorage.setItem('aygj_v29', currentData);
-                    alert("✅ 清理成功！菜单已保存！");
-                    return true;
-                } catch (err) {
-                    alert("❌ 清理后依然存不下，请尝试手动清除浏览器缓存。");
-                    return false;
-                }
-            }
-            return false; 
-        } 
-    }
-    
-    function clearAllData() {
-        if(confirm("⚠️ 确定要重置？这将清除所有旧图片和缓存，解决报错问题。")) {
-            localStorage.clear(); // 彻底清空
-            data = JSON.parse(JSON.stringify(defaultData));
-            saveData(); renderAll(); closeModal('backupModal');
-            alert("✅ 垃圾已清理，现在可以正常使用了！");
+    // --- 搜索逻辑 ---
+    function handleSearch() {
+        const kw = document.getElementById('mainSearch').value.trim();
+        const container = document.getElementById('container-main');
+        if (!kw) { renderTab('main', 'container-main'); return; }
+        container.innerHTML = "";
+        const grid = document.createElement('div'); grid.className = "grid"; grid.style.marginTop = "10px";
+        let foundCount = 0;
+        for (let cat in data.main) {
+            data.main[cat].forEach((item, idx) => {
+                if (item.n.includes(kw)) { grid.appendChild(createCard(item, 'main', cat, idx)); foundCount++; }
+            });
+        }
+        if (foundCount === 0) container.innerHTML = `<div style="text-align:center;color:#999;padding:20px;">🤷‍♂️ 没找到...</div>`;
+        else {
+            const tip = document.createElement('div'); tip.style.color = "var(--primary)"; tip.style.fontSize="13px"; tip.style.marginBottom="10px"; tip.innerText = `🔍 找到 ${foundCount} 个:`;
+            container.appendChild(tip); container.appendChild(grid);
         }
     }
 
-    function openBackupModal() { document.getElementById('backup-area').value = JSON.stringify(data); document.getElementById('backupModal').classList.add('show'); }
-    function doExport() { document.getElementById('backup-area').select(); document.execCommand('copy'); alert("✅ 备份代码已复制！"); }
-    function doImport() {
-        const str = document.getElementById('backup-area').value;
-        if(!str) { alert("请先粘贴备份代码！"); return; }
-        try { const d = JSON.parse(str); if(confirm("⚠️ 确定要恢复吗？")) { data = d; saveData(); renderAll(); closeModal('backupModal'); alert("🎉 恢复成功！"); } } catch(e) { alert("❌ 代码格式不对哦"); }
+    // --- 云端逻辑 ---
+    async function loadFromCloud() {
+        const btn = document.getElementById('syncBtn'); btn.classList.add('spinning');
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+            if (!res.ok) throw new Error("Failed");
+            const json = await res.json();
+            data = json.record;
+            if (!data.bf || Object.keys(data.bf).length === 0) { data = JSON.parse(JSON.stringify(defaultData)); await saveToCloud(); }
+            renderAll(); localStorage.setItem('aygj_v36_local', JSON.stringify(data)); 
+        } catch (e) {
+            const saved = localStorage.getItem('aygj_v36_local');
+            data = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+            renderAll();
+        } finally { btn.classList.remove('spinning'); }
     }
 
-    function toggleEditMode() {
+    async function saveToCloud() {
+        const btn = document.getElementById('syncBtn'); btn.classList.add('spinning');
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
+            if (!res.ok) throw new Error("Save failed");
+            localStorage.setItem('aygj_v36_local', JSON.stringify(data)); return true;
+        } catch (e) { alert("❌ 同步失败"); return false; } finally { btn.classList.remove('spinning'); }
+    }
+
+    function forceSync() { if(confirm("☁️ 确定要从云端拉取最新菜单吗？")) { loadFromCloud(); } }
+
+    // --- 常规逻辑 ---
+    async function toggleEditMode() {
         const body = document.body; const btn = document.getElementById('mainActionBtn');
         if (body.classList.contains('edit-mode')) {
-            if(saveData()) { alert("❤️ 菜单保存好啦！"); body.classList.remove('edit-mode'); btn.innerText="✎ 编辑菜单"; btn.classList.remove('saving-mode'); document.getElementById('add-cat-bf').style.display='none'; document.getElementById('add-cat-main').style.display='none'; renderAll(); }
+            if(BIN_ID.includes("请在")) { localStorage.setItem('aygj_v36_local', JSON.stringify(data)); alert("✅ 本地保存成功"); exitEdit(); } 
+            else if(await saveToCloud()) { alert("☁️ 菜单已同步到云端！"); exitEdit(); }
         } else {
-            body.classList.add('edit-mode'); btn.innerText="💾 保存"; btn.classList.add('saving-mode'); document.getElementById('add-cat-bf').style.display='block'; document.getElementById('add-cat-main').style.display='block'; renderAll();
+            body.classList.add('edit-mode'); btn.innerText="💾 保存并同步"; btn.classList.add('saving-mode'); 
+            document.getElementById('add-cat-bf').style.display='block'; document.getElementById('add-cat-main').style.display='block'; renderAll();
         }
+    }
+    
+    function exitEdit() {
+        const body = document.body; const btn = document.getElementById('mainActionBtn');
+        body.classList.remove('edit-mode'); btn.innerText="✎ 编辑菜单"; btn.classList.remove('saving-mode'); 
+        document.getElementById('add-cat-bf').style.display='none'; document.getElementById('add-cat-main').style.display='none'; renderAll();
     }
 
     function renderAll() { renderTab('bf', 'container-bf'); renderTab('main', 'container-main'); renderSettings(); }
     function renderTab(tab, containerId) {
+        if (containerId === 'container-main' && document.getElementById('mainSearch') && document.getElementById('mainSearch').value.trim() !== "") return;
         const container = document.getElementById(containerId); container.innerHTML = "";
         const isEdit = document.body.classList.contains('edit-mode'); const db = data[tab];
+        if(!db) return;
         for (let cat in db) {
             const wrapper = document.createElement('div'); wrapper.className="cat-wrapper"; wrapper.dataset.cat=cat;
             const header = document.createElement('div'); header.className="cat-header";
@@ -338,9 +348,9 @@
             const grid = document.createElement('div'); grid.className="grid";
             db[cat].forEach((item, idx) => { grid.appendChild(createCard(item, tab, cat, idx)); });
             wrapper.appendChild(header); wrapper.appendChild(grid); container.appendChild(wrapper);
-            if(isEdit) new Sortable(grid, { animation:200, delay:200, delayOnTouchOnly:true, ghostClass:'sortable-ghost', dragClass:'sortable-drag', onEnd:(evt)=>{const i=data[tab][cat].splice(evt.oldIndex,1)[0]; data[tab][cat].splice(evt.newIndex,0,i); saveData();} });
+            if(isEdit) new Sortable(grid, { animation:200, delay:200, delayOnTouchOnly:true, ghostClass:'sortable-ghost', dragClass:'sortable-drag', onEnd:(evt)=>{const i=data[tab][cat].splice(evt.oldIndex,1)[0]; data[tab][cat].splice(evt.newIndex,0,i);} });
         }
-        if(isEdit) new Sortable(container, { animation:200, handle:'.drag-handle', onEnd:(evt)=>{const n={}; container.querySelectorAll('.cat-wrapper').forEach(w=>{n[w.dataset.cat]=data[tab][w.dataset.cat]}); data[tab]=n; saveData();} });
+        if(isEdit) new Sortable(container, { animation:200, handle:'.drag-handle', onEnd:(evt)=>{const n={}; container.querySelectorAll('.cat-wrapper').forEach(w=>{n[w.dataset.cat]=data[tab][w.dataset.cat]}); data[tab]=n;} });
     }
     function createCard(item, tab, cat, idx) {
         const div = document.createElement('div'); const order = orders[item.n]; let cls = "card"; let countHtml=""; let noteHtml="";
@@ -357,9 +367,9 @@
         div.onclick = () => { if(!document.body.classList.contains('edit-mode')) openOrderModal(item, tab); };
         return div;
     }
-    function addCategory(tab) { const n=prompt("新分类名称："); if(n){if(!data[tab])data[tab]={}; if(data[tab][n]){alert("有了");return;} data[tab][n]=[]; saveData(); renderAll();} }
-    function renameCat(tab, old) { const n=prompt("新名字", old); if(n&&n!==old&&!data[tab][n]){const i=data[tab][old]; delete data[tab][old]; data[tab][n]=i; saveData(); renderAll();} }
-    function delCat(tab, cat) { if(confirm(`删除【${cat}】？`)){delete data[tab][cat]; saveData(); renderAll();} }
+    function addCategory(tab) { const n=prompt("新分类名称："); if(n){if(!data[tab])data[tab]={}; if(data[tab][n]){alert("有了");return;} data[tab][n]=[]; renderAll();} }
+    function renameCat(tab, old) { const n=prompt("新名字", old); if(n&&n!==old&&!data[tab][n]){const i=data[tab][old]; delete data[tab][old]; data[tab][n]=i; renderAll();} }
+    function delCat(tab, cat) { if(confirm(`删除【${cat}】？`)){delete data[tab][cat]; renderAll();} }
 
     function openDishModal(tab, cat, idx) {
         editCtx = { tab, cat, idx, isNew: idx===-1 }; const item = idx===-1 ? {n:"", prep:""} : data[tab][cat][idx];
@@ -370,9 +380,11 @@
         const n = document.getElementById('dm-name').value; if(!n) return;
         const item = { n, prep: document.getElementById('dm-prep').value };
         if(editCtx.isNew) data[editCtx.tab][editCtx.cat].push(item); else data[editCtx.tab][editCtx.cat][editCtx.idx] = item;
-        saveData(); closeModal('dishModal'); renderAll();
+        closeModal('dishModal'); 
+        document.getElementById('mainSearch').value = ""; 
+        renderAll();
     }
-    function deleteDish() { if(confirm("删除？")){data[editCtx.tab][editCtx.cat].splice(editCtx.idx, 1); delete orders[document.getElementById('dm-name').value]; saveData(); closeModal('dishModal'); renderAll();} }
+    function deleteDish() { if(confirm("删除？")){data[editCtx.tab][editCtx.cat].splice(editCtx.idx, 1); delete orders[document.getElementById('dm-name').value]; closeModal('dishModal'); document.getElementById('mainSearch').value = ""; renderAll();} }
 
     function openOrderModal(item, tab) {
         orderCtx={item,tab}; const order=orders[item.n]||{}; document.getElementById('om-title').innerText=item.n;
@@ -396,8 +408,9 @@
         if(orderCtx.tab==='bf'){ if(document.getElementById('sec-bf').classList.contains('active-bf')) orders[item.n].bf={active:true,count:getQty('bf'),note:getVal('note-bf')}; else delete orders[item.n].bf; }
         else {
             if(document.getElementById('sec-lunch').classList.contains('active')) orders[item.n].lunch={active:true,count:getQty('lunch'),note:getVal('note-lunch')}; else delete orders[item.n].lunch;
-            if(document.getElementById('sec-dinner').classList.contains('active')) { const m=document.getElementById('sec-dinner').dataset.mode||'cook'; const n=getVal('note-dinner'); orders[item.n].dinner={active:true,count:getQty('dinner'),mode:m,note:n}; if(m==='prep'&&n){item.prep=n;saveData();} } else delete orders[item.n].dinner;
-        } closeModal('orderModal'); renderAll();
+            if(document.getElementById('sec-dinner').classList.contains('active')) { const m=document.getElementById('sec-dinner').dataset.mode||'cook'; const n=getVal('note-dinner'); orders[item.n].dinner={active:true,count:getQty('dinner'),mode:m,note:n}; if(m==='prep'&&n){item.prep=n; saveToCloud();} } else delete orders[item.n].dinner;
+        } closeModal('orderModal'); 
+        if (document.getElementById('mainSearch').value) handleSearch(); else renderAll();
     }
     function getQty(t){return parseInt(document.getElementById(t==='bf'?'qty-bf':(t==='lunch'?'qty-lunch':'qty-dinner')).innerText);}
     function getVal(id){return document.getElementById(id).value;}
@@ -414,30 +427,44 @@
             el.appendChild(d);
         });
         const add=document.createElement('div'); add.className="chip"; add.style.border="1px dashed #FFD1C7"; add.style.background="white"; add.style.color="var(--primary)"; add.innerHTML="+";
-        add.onclick=()=>{if(document.body.classList.contains('edit-mode')){const v=prompt("添加");if(v){data.options[key].push(v);saveData();renderSettings();}}};
+        add.onclick=()=>{if(document.body.classList.contains('edit-mode')){const v=prompt("添加");if(v){data.options[key].push(v);saveToCloud();renderSettings();}}};
         el.appendChild(add);
     }
-    function delOpt(k,i){data.options[k].splice(i,1);saveData();renderSettings();}
-    function editLabel(k){const v=prompt("新标题",data.labels[k]);if(v){data.labels[k]=v;saveData();renderSettings();}}
+    function delOpt(k,i){data.options[k].splice(i,1);saveToCloud();renderSettings();}
+    function editLabel(k){const v=prompt("新标题",data.labels[k]);if(v){data.labels[k]=v;saveToCloud();renderSettings();}}
+    
     function generate(){
         const btn=document.getElementById('btn-copy'); btn.innerText="📄 复制给阿姨"; btn.style.backgroundColor="var(--primary)";
-        let msg="阿姨，明天饭菜安排：\n"; let bf=[],lu=[],di=[];
+        let msg="阿姨，明天饭菜安排：\n"; let bf=[], lu=[], dCook=[], dPrep=[];
         for(let k in orders){
             if(orders[k].bf?.active) bf.push(`${k}${orders[k].bf.count>1?' x'+orders[k].bf.count:''} ${orders[k].bf.note?('('+orders[k].bf.note+')'):''}`);
             if(orders[k].lunch?.active) lu.push(`${k}${orders[k].lunch.count>1?' x'+orders[k].lunch.count:''} ${orders[k].lunch.note?('('+orders[k].lunch.note+')'):''}`);
-            if(orders[k].dinner?.active) {const d=orders[k].dinner; di.push(`${d.mode==='prep'?'🔪 ':'🍳 '}${k}${d.count>1?' x'+d.count:''} ${d.note?('('+d.note+')'):''}`);}
+            if(orders[k].dinner?.active) {
+                const d = orders[k].dinner;
+                const s = `${k}${d.count>1?' x'+d.count:''}${d.note?' ('+d.note+')':''}`;
+                if(d.mode==='prep') dPrep.push(s); else dCook.push(s);
+            }
         }
         if(bf.length||tmpB) msg+=`\n☀️【早餐】${tmpB?(' '+tmpB):''}\n${bf.join('，')}`;
-        if(lu.length||tmpL) msg+=`\n\n🍱【中餐】${tmpL?(' '+tmpL):''}\n${lu.join('，')}${document.getElementById('input-lunch-extra').value?('\n补充: '+document.getElementById('input-lunch-extra').value):''}`;
-        if(di.length||tmpD) msg+=`\n\n🌙【晚餐】${tmpD?(' '+tmpD):''}\n${di.join('\n')}${document.getElementById('input-dinner-extra').value?('\n补充: '+document.getElementById('input-dinner-extra').value):''}`;
+        if(lu.length||tmpL) msg+=`\n\n🍱【午餐】${tmpL?(' '+tmpL):''}\n${lu.join('，')}${document.getElementById('input-lunch-extra').value?('\n补充: '+document.getElementById('input-lunch-extra').value):''}`;
+        if(dCook.length||dPrep.length||tmpD) {
+            msg+=`\n\n🌙【晚餐】${tmpD?(' '+tmpD):''}`;
+            if(dCook.length) msg+=`\n👩‍🍳 需做熟：\n- ${dCook.join('\n- ')}`;
+            if(dPrep.length) msg+=`\n🔪 需切配：\n- ${dPrep.join('\n- ')}`;
+            if(document.getElementById('input-dinner-extra').value) msg+=`\n补充: ${document.getElementById('input-dinner-extra').value}`;
+        }
         const gn=document.getElementById('global-note').value; if(gn) msg+=`\n\n📝【备注】\n${gn}`;
         msg+="\n\n辛苦阿姨了！";
         document.getElementById('final-text').value=msg; document.getElementById('resultModal').classList.add('show');
     }
     function copyText(){document.getElementById('final-text').select();document.execCommand('copy');const btn=document.getElementById('btn-copy');btn.innerText="✅ 复制成功啦";btn.style.backgroundColor="#6BCB77";}
     function closeModal(id){document.getElementById(id).classList.remove('show');}
-    function switchTab(t){document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');document.getElementById('tab-'+t).classList.add('active');}
-    
+    function switchTab(t){document.getElementById('mainSearch').value=""; document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');document.getElementById('tab-'+t).classList.add('active'); renderAll();}
+    function clearAllData(){if(confirm("⚠️ 确定要重置？\n这将拉取【GitHub默认菜单】覆盖当前所有数据。")){localStorage.removeItem('aygj_v36_local');data=JSON.parse(JSON.stringify(defaultData));saveToCloud();renderAll();closeModal('backupModal');alert("✅ 数据已重置！");}}
+    function openBackupModal(){document.getElementById('backup-area').value=JSON.stringify(data);document.getElementById('backupModal').classList.add('show');}
+    function doExport(){document.getElementById('backup-area').select();document.execCommand('copy');alert("✅ 备份代码已复制！");}
+    function doImport(){const str=document.getElementById('backup-area').value;if(!str){alert("请先粘贴备份代码！");return;}try{const d=JSON.parse(str);if(confirm("⚠️ 确定要恢复吗？")){data=d;saveToCloud();renderAll();closeModal('backupModal');alert("🎉 恢复成功！");}}catch(e){alert("❌ 代码格式不对哦");}}
+
     init();
 </script>
 </body>
